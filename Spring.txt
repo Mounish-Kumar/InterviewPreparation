@@ -1,0 +1,368 @@
+-----------
+Spring Core
+-----------
+Annotations was brought in version 2.5
+
+Dependency Injection:
+Loose coupling, makes it easier to switch between different implementations.
+Easy to unit test in isolation.
+Spring Container (Creates Spring Beans for classes with @Component and inject it wherever we use @Autowired)
+
+Inversion of Control (IoC): Spring container will manage object creation
+
+When 2 or more beans of same type,
+• use @Primary along with @Component
+• use @Qualifier("name") along with @Autowired
+
+@Scope("singleton"): Creates object only once and reuse it everytime. Default scope.
+@Scope("prototype"): Create object only while getting Bean, not singleton
+@Scope("request"): Create object for every http request
+@Scope("session"): Create object for every user session
+@Scope("global-session"): Same as session scope for servlet applications
+
+Generic stereotype: @Component
+
+Specific stereotypes: Specific stereotypes are used for associating annotations with aspects.
+@Controller, @Service, @Repository
+@Repository: Native exceptions will be translated to Spring's DataAccessException.
+@Bean: Method level annotation for creating beans. Should be used inside @Configuration class.
+
+
+-----------
+Spring Boot
+-----------
+• Focuses on convention over configuration.
+• Minimizes configurations and dependency management.
+• Embedded Tomcat server.
+• H2 In-memory database.
+• Spring Initializr (start.spring.io) to create project.
+• Actuator endpoints to monitor application health metrics.
+• DevTools for automatic restart.
+• application.properties or application.yml
+• Uses Logback (SLF4J) for Logging.
+• Add schema.sql, data.sql file in /resources folder, spring boot will execute it while starting the project.
+
+@SpringBootApplication = @Configuration + @EnableAutoConfiguration + @ComponentScan
+All the configuration classes are present in spring-boot-autoconfigure.jar.
+/META-INF/spring.factories lists all the auto configuration classes.
+
+@Conditional(IsDevEnvCondition.class)		// enable or disable Configuration class based on condition
+IsDevEnvCondition should implement Condition interface and override matches() method
+Ex: JpaRepository is enabled based on below conditions.
+@ConditionalOnBean(DataSource.class)
+@ConditionalOnClass(JpaRepository.class)
+@ConditionalOnMissingBean({JpaRepositoryFactoryBean.class, JpaRepositoryConfigExtension.class})
+@ConditionalOnProperty(prefix="spring.data.jpa.repositories", name="enabled", havingValue = "true", matchIfMissing = true)
+class JpaRepositoriesAutoConfiguration {  }
+
+SpringApplication.run() method internal flow:
+• Creates application context.
+• Checks application type.
+• Registers annotated beans with context.
+• Creates TomcatEmbeddedServletContainer and adds it to context.
+
+@Value("${apikey}")							// Get value from application.properties file
+@Value("${apikey: default value}")			// Provide default value with :
+@Value("${skills}")							// Can be used for List<String>, if the values are separated by ,
+@Value("#{${employee.detail}}")				// Can be used for Map<String, String>, if there is a JS object
+@ConfigurationProperties("spring.orabe.datasource")	// Maps property values with spring bean
+
+@PostConstruct			// call method once after initialization of beans
+@PreDestroy				// call method once before removing bean from application context
+
+Actuators:
+Expose operational information about the running application as HTTP endpoints.
+Used for monitoring our app, gathering metrics, understanding traffic, or state of our database.
+
+Actuator Endpoints:
+/beans returns all available beans in our BeanFactory.
+/env returns the current environment properties.
+/configprops allows us to fetch all @ConfigurationProperties beans.
+/logfile returns application logs.
+/loggers enables us to query and modify the logging level of our application.
+/health summarizes the health status of our application.
+/metrics details metrics of our application.
+/shutdown performs a graceful shutdown of the application.
+
+
+-----------
+Spring REST
+-----------
+@Controller: Returns view name (jsp)
+@ResponseBody is used to tell Spring that we're returning the data, not jsp (view name)
+@RestController: Returns object. @RestController = @Controller + @ResponseBody
+
+@RequestMapping(value="/employee", method=RequestMethod.GET, produces={MediaType.APPLICATION_JSON}, consumes={MediaType.APPLICATION_JSON})
+@GetMapping, @PostMapping, @PutMapping, @DeleteMapping
+
+For consuming a service:
+• RestTemplate
+• WebClient (Reactive way)
+• FeignClient: Automatic loading balancing in Spring Cloud.
+  @EnableFeignClients
+  @FeignClient(url="/users", name="")
+  @RequestMapping(value="/${userId}", method=RequestMethod.GET)
+
+Interceptor:
+Need to implement HandlerInterceptor interface
+preHandle, postHandle, afterCompletion.
+• Used to validate if request has authorization header.
+• Used to add logs for http requests.
+
+@Configuration
+class WebConfig implements WebMvcConfigurer {
+	
+	@Override public void addInterceptors(InterceptorRegistry registry) {
+		registry.addInterceptor(new AuthInterceptor()).addPathPatterns("/api/**");
+	}
+	
+	@Override public void addCorsMappings(CorsRegistry registry) {
+		registry.addMapping("/api/**").allowedOrigins("*");
+	}
+	
+}
+
+HttpStatus:
+OK(200, Series.SUCCESSFUL, "OK")
+CREATED(201, Series.SUCCESSFUL, "Created")
+ACCEPTED(202, Series.SUCCESSFUL, "Accepted")
+BAD_REQUEST(400, Series.CLIENT_ERROR, "Bad Request")
+UNAUTHORIZED(401, Series.CLIENT_ERROR, "Unauthorized")				// Unauthenticated
+FORBIDDEN(403, Series.CLIENT_ERROR, "Forbidden")					// Unauthorized
+NOT_FOUND(404, Series.CLIENT_ERROR, "Not Found")
+TOO_MANY_REQUESTS(429, Series.CLIENT_ERROR, "Too Many Requests")
+METHOD_NOT_ALLOWED(405, Series.CLIENT_ERROR, "Method Not Allowed")
+INTERNAL_SERVER_ERROR(500, Series.SERVER_ERROR, "Internal Server Error")
+
+Dispatcher Servlet: Front controller behind the scene provided by Spring. All request will first go to dispatcher servlet.
+jackson-core is responsible to convert Java code to JSON.
+jackson-dataformat-xml to convert Java code to XML.
+
+Exception handling:
+@ControllerAdvice			// Class level annotation
+@ExceptionHandler(MethodArgumentNotValidException.class)		// Method level annotation
+@Valid
+
+@Data: For getters and setters. Need to add lombok dependency.
+@AllArgsConstructor: For all arguments constructor. Need to add lombok dependency.
+@NoArgsConstructor: For no arguments constructor. Need to add lombok dependency.
+@JsonProperty: To change JSON property name
+@JsonRawValue: Converts string to json object
+@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="dd/MM/yyyy"): Convert String to Date
+@JsonFormat(shape=JsonFormat.Shape.NUMBER): Convert Date to Number
+
+HATEOAS (Hypermedia As The Engine Of Application State) Principle:
+API should guide the client by returning links or next potential steps along with each response
+DTO should implement RepresentationModel<Employee>
+Link viewLink = linkTo(methodOn(this.getClass()).getEmployeeById(savedEmployee.getId())).withRel("view");
+
+Use annotation at Repository @RepositoryRestResource(CollectionResourceRel="employee", path="employee")
+
+Swagger: For API documentation http://localhost:8080/swagger-ui.html
+CodeGen: To generate rest clients from swagger.json
+
+JAX-WS vs JAX-RS:
+JAX-WS means Java API for XML Web Service. It follows SOAP protocol. It uses XML for communication.
+JAX-WS means Java API for XML Rest Service. It follows HTTP protocol. It uses JSON, XML, HTML for communication.
+
+Why List should not be returned as API response?
+If I want to add a new field in future, contract will be broken. No backward compatibility.
+While using RestTemplate, cannot pass the response type as List.class. Solution: Parameterized<List<Employee>>
+
+Content negotiation: Send any type of data as response based on user request. Set header Accept: application/json.
+
+HTTP is stateless.
+Fake REST services: https://jsonplaceholder.typicode.com/
+Convert JSON to POJO: https://www.jsonschema2pojo.org/
+
+
+----------
+Spring AOP
+----------
+Separating crosscutting concerns from business logic.
+@SpringBootApplication is an example of AOP
+
+Aspect: Functionality that crosscuts over multiple objects. Ex: logging, exception handling, security, transaction management
+Advice: Code implementation of aspect.
+Weaving: Associating crosscutting concerns to business logic dynamically.
+
+Pointcut: Points where aspects will be applied. Ex: package, class, method, annotation
+@Pointcut("execution(* com.example.EmployeeDemo.*.*.*(..) )")
+@Pointcut("@annotation(com.example.EmployeeDemo.common.TrackExecutionTime)")
+
+Join point: Point during execution of method or handling of exception.
+@Before, @After, @AfterReturning, @AfterThrowing, @Around
+
+@Around("execution(* com.example.EmployeeDemo.*.*.*(..) )")
+public Object applicationLogging(ProceedingJoinPoint pjp) throws Throwable {
+	String methodName = pjp.getSignature().getName();
+	String className = pjp.getTarget().getClass().toString();
+	Object[] args = pjp.getArgs();
+	ObjectMapper mapper = new ObjectMapper();
+	log.info("method invoked " + className + " : " + methodName + "() >> Arguments: " + mapper.writeValueAsString(args));
+	
+	Object object = pjp.proceed();
+	log.info(className + " : " + methodName + "() >> Returns: " + mapper.writeValueAsString(object));
+	return object;
+}
+
+
+---------------
+Spring Security
+---------------
+Spring Security provides application level security.
+• Username & Password Authentication
+• Single Sign-On or Okta or LDAP authentication (Lightweight Directory Access Protocol)
+• App level authorization
+• Intra app authorization using OAuth
+• Microservice security using JWT or tokens
+• Method level security
+
+Authentication: Veryfying identity of a user. (Uses filters)
+Authorization: Gives user permission to access a resource. (Uses Session tokens or JWT)
+Principal: Currently logged-in user.
+Role: Group of authorities. Ex: User, Admin, Customer, Delivery, Restaurant, Driver
+
+Spring Security default behavior:
+• Adds login form and /logout url
+• Adds mandatory authentication for all URLs
+
+Username Password Authentication:
+• Create configuration class and extend WebSecurityConfigurerAdapter class and override two configure methods.
+  One method is for authentication and another for authorization.
+  Create beans for AuthenticationManager and PasswordEncoder.
+• Create a class that implements UserDetailsService interface and override loadUserByUsername(username) method.
+  In loadUserByUsername() method, fetch user details from repository.
+• Authenticate by passing username and password to authenticationManager.authenticate() method.
+  If credentials don't match, BadCredentialsException is thrown.
+  If credentials match, we have to generate JWT token using user details and send as response.
+• For subsequent requests, JWT should be sent in "Authorization" header.
+• We have to extract JWT from request header and validate it for every request by creating a Filter.
+  This filter (JwtRequestFilter) should extend OncePerRequestFilter and override doFilterInternal() method.
+
+@EnableWebSecurity
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+	@Autowired UserDetailsService userDetailsService;
+	
+	@Autowired JwtRequestFilter jwtRequestFilter;
+
+	// For Authentication
+	@Override protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+		auth.userDetailsService(userDetailsService);
+	}
+
+	// For Authorization
+	@Override protected void configure(HttpSecurity http) throws Exception {
+		http
+		.csrf().disable()												// Disable CSRF
+		.authorizeRequests().antMatchers("/authenticate").permitAll()	// For /authenticate, permit without authentication
+		.anyRequest().authenticated()									// For other endpoints, authenticate
+		.and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+		
+		// For JWT validation, add custom filter that extends OncePerRequestFilter
+		http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+	}
+
+	@Bean public PasswordEncoder PasswordEncoder() { return NoOpPasswordEncoder.getInstance(); }
+
+	@Bean @Override public AuthenticationManager authenticationManagerBean() throws Exception { return super.authenticationManager(); }
+}
+
+
+Session Tokens:
+After authentication, server creates a session ID and set it in cookie header.
+For every subsequent request from the browser, the cookie will be automatically added in the header.
+
+Drawbacks of Session Tokens:
+The problem with this approach is the session tokens are useful only for single server architecture.
+In microservices world, we have multiple instances of an application sharing load using load balancer.
+Let's say the login request is routed to instance 1 and session is created in that instance.
+If next request is routed to instance 2, it cannot understand the session created in instance 1.
+
+JSON Web Tokens:
+When client autheticates, instead of saving the user information on server and returning the session ID,
+it returns the whole user information itself as signed JSON token.
+For every subsequent https request, the client needs to send JWT in "Authorization" header.
+Algorithm used is HS256.
+JWT = HEADER (alg & type base64 encoded)
+	  + PAYLOAD (user data base64 encoded)
+	  + SIGNATURE (secret key to validate JWT)
+
+Drawbacks of JWT:
+What if someone else steals my JWT? Atleast in Session Tokens, you can logout and end the session.
+How to handle expiry of JWT?
+
+OAuth:
+Protocol for authorization between services.
+Protected Resource: Resource that client is trying to access (Ex: Photos in Google Drive).
+Resource Owner: User who owns the resource.
+Resource Server: The server that has the protected resource (Ex: Google Drive).
+Client: Application that requests access to protected resource on behalf of resource owner with its authorization.
+Authorization Server: Issues access tokens to the client.
+
+Authorization Code Flow:
+Authorization Server provides Auth Token with which Client can get Access Token. Flow used in OIDC.
+• Resource Owner requesting Client to access Resource from Resource Server.
+• Client requests Authorization server.
+• Authorization Server asks permission from Resource Owner.
+• When Resource Owner allows access, Authorization Server sends Auth Token to Client.
+• When Client needs to access Resource, it sends Auth Token to Authorization Server for getting Access Token.
+• Client uses this Access Token to access Resource in Resource Server.
+• Resource Server validates Access Token with Authorization Server and then allow access.
+
+Implicit Flow:
+Authorization Server provides Access Token directly. Not very secure. Used for short lived Access Token.
+• Resource Owner requesting Client to access Resource from Resource Server.
+• Client requests Authorization server.
+• Authorization Server asks permission from Resource Owner.
+• When Resource Owner allows access, Authorization Server sends Access Token to Client.
+• Client uses Access Token to access Resource in Resource Server.
+• Resource Server validates Access Token with Authorization Server and then allow access.
+
+Client Credentials Flow:
+Authorization Server provides JWT along with access token.
+• When Microservice X wants to make a call to Microservice Y, X calls Auth Server.
+• Auth Server gives Access Token to X.
+• Using this Access Token, X can call services in Y.
+
+OpenID Connect:
+Authentication layer on top of OAuth2 protocol. Provides Single Sign On (SSO).
+Allows client to identify user based on authentication performed by Authorization Server
+and to obtain basic information about user as JWT along with access token.
+• Add spring-security-oauth2-autoconfigure in pom.xml file.
+• Add @EnableOAuth2Sso
+• Create an app in Google or Facebook or GitHub and copy-paste App ID and App Secret in your application.yml file.
+• In application.yml file,
+
+security.oauth2:
+	client:
+		clientId: <App ID>
+		clientSecret: <App Secret>
+		accessTokenUri: https://graph.facebook.com/oauth/access_token
+		userAuthorizationUri: https://www.facebook.com/dialog/oauth			// url to redirect for authentication
+		tokenName: oauth_token
+		authenticationScheme: query
+		clientAuthenticationScheme: form
+	resource.userInfoUri: https://graph.facebook.com/men
+
+
+Cross-Site Request Forgery (CSRF):
+Attacker sends malicious link to the user.
+If user clicks that link, malicious website makes request to legitimate website on which user is logged in.
+To secure application from CSRF attack, we have to send X-XSRF-TOKEN in request header.
+We can disable CSRF when,
+• we're creating service that is used by non-browser clients
+• we're using stateless (cookie-less) Rest APIs i.e. session is not maintained in Server.
+
+Cross-Origin Resource Sharing (CORS):
+Browser's same-origin policy blocks cross-origin requests.
+Browser sends preflight OPTIONS request first to check whether cross-origin is allowed.
+Access-Control-Allow-Origin: * in response header allows all origin.
+• @CrossOrigin(origins = "http://example.com", maxAge = 3600)
+• Create a class that implements WebMvcConfigurer and override addCorsMappings() method
+
+Password Hashing:
+Password hashing is oneway. Algorithms used are SHA, MD5, BCrypt.
+
+

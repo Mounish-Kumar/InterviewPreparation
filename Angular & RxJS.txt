@@ -1,0 +1,222 @@
+-------
+ANGULAR
+-------
+AngularJS: JS, MVC architecture
+Angular 2: Typescript 1.8, Component based architecture, Mobile device support
+Angular 3: Didn't release this version due to router package mismatch
+Angular 4: TS2.2, Improved performance in AOT compiler generated code, @angular/animation separated from core, *ngIf else
+Angular 5: TS2.3, Build optimization, HttpModule to HttpClientModule, Router lifecycle events
+Angular 6: RxJS6 breaking changes, Service providedIn root, ng update, angular.json instead of angular-cli.json
+Angular 7: TS2.9, CLI prompts, KeyValue pipe, Virtual scrolling
+Angular 8: TS3.2, Ivy compiler opt-in (smaller bundles, faster compilation), Differential loading, lazy loading syntax changed
+Angular 9: TS3.7, Ivy compiler by default, Improved dependency injection (providedIn: any, platform), AOT compilation by default
+
+
+Angular performance improvements:
+• Bundling, tree-shaking (eliminates unused code), minifying, uglifying
+• Ivy compiler
+  Optimised code, faster build time, reduced bundle size & better performance.
+• AOT compilation
+  AOT (Ahead Of Time): Angular apps are compiled during build phase itself.
+  JIT (Just In TIme): Compiler will be bundled with application and sent to browser.
+					  Angular app will be compiled in browser just before execution.
+• Preloading
+  Reduces loading time by loading modules in the background.
+   • PreloadAllModules Strategy
+   • Custom Preloading Strategy
+• Preloading & Lazy loading
+  Eagerly load modules required at startup. Ex: authentication module, core module, shared module etc.
+  Preload frequently used modules.
+  Lazy load remaining modules.
+• Server side rendering using Angular Universal to reduce initial load time
+• Virtual Scrolling
+• ngFor trackBy
+• Service Workers (Caching)
+• OnPush Change Detection Strategy (Only 2 change detection: When input of Component changes, event triggered)
+• NgZone.runOutsideAngular()
+
+
+
+ViewEncapsulation:
+Styles can be encapsulated to one part of DOM and hidden from rest of the application.
+Styles we define on a component don’t leak out to the rest of the application.
+• Emulated (Default):
+  Inherits global styles.
+• ShadowDOM:
+  Global styles are lost.
+• None:
+  No encapsulation.
+
+
+Lifecycle Hooks:
+• ngOnChanges(SimpleChanges changes)
+  Invoked every time when there is change in input properties of component.
+• ngOnInit()
+  Invoked once when component has been initialized.
+• ngDoCheck()
+  Allows us to implement our own change detection algorithm for component.
+  ngDoCheck and ngOnChanges should not be implemented together on same component.
+• ngAfterViewInit()
+  Invoked when child component view has been fully initialized.
+• ngOnDestroy()
+  Invoked before Angular destroys component.
+  Used to unsubscribe observables to avoid memory leaks.
+
+
+Pipe:
+Used in template expressions to accept an input value and return a transformed value.
+• Pure Pipe:
+  Pure pipe is only called when Angular detects a change in value or parameters passed to a pipe.
+• Impure Pipe:
+  Impure pipe is called for every change detection cycle no matter whether the value or parameters changes.
+  Inefficient, because impure pipes are called for every change detection cycle.
+  Impure pipes are useful when you pass array or object, because content change is not detected by Angular. 
+• Async Pipe:
+  Async pipe subscribes to Observable or Promise and returns latest value it has emitted.
+  When component gets destroyed, async pipe unsubscribes automatically to avoid potential memory leaks.
+  <div> observable$ | async </div>
+  <row *ngFor="let product of products$ | async"></row>
+• Custom Pipe:
+  Implement PipTransform interface and override transform(value, ...args) method.
+
+
+Directive:
+• Structural Directive:
+  Directives that change DOM layout by adding or removing DOM elements. Ex: *ngIf, *ngFor
+  We cannot use two structural directives in same element.
+• Attribute Directive:
+  Directives that add additional behavior to elements. Ex: ngClass, ngStyle, ngModel
+• Component Directive:
+  Directives with view (template & styles).
+
+
+Content Projection:
+A component that accepts content provided by another component.
+<ng-content select="popup-body"></ng-content>
+
+To conditionally render content during content projection.
+<span *ngIf="condition">
+	<ng-container *ngTemplateOutlet="popup-body"></ng-container>
+</span>
+
+<popup>
+	<ng-template #popup-body>...</ng-template>
+</popup>
+
+
+ng-template vs ng-container:
+ng-template is used when you need to include code at various places using *ngTemplateOutlet or *ngIf else.
+ng-template will be replaced by comment while rendering. Should be used only with structural directive.
+ng-container is used to group elements together without having to introduce another element.
+ng-container will always be rendered.
+
+
+Form:
+• Template-Driven Form:
+  Uses two-way binding i.e. [(NgModel)]
+  FormsModule
+  Logic is present in html code.
+  Unit testing is a challenge.
+• Model-Driven or Reactive Form:
+  Can add elements dynamically.
+  Can handle events based on debounce time or distinct until changed.
+  No data binding is done.
+  ReactiveFormsModule
+  Logic is present in typescript code.
+
+this.searchField = new FormControl();
+this.searchField.valueChanges
+	.pipe(
+		debounceTime(400),
+		distinctUntilChanged()
+	).subscribe(value => console.log(value));
+
+Router Guards:
+Used to prevent users from accessing pages that they’re not allowed to access.
+• CanActivate:
+  Checks to see if user can visit a route.
+• CanActivateChild:
+  Checks to see if user can visit a route's children.
+• CanLoad:
+  Checks to see if user can route to a lazy loaded module.
+  CanActivate can also be used, but it will download the module.
+• CanDeactivate:
+  Checks to see if user can exit a route.
+• Resolve:
+  Used when we want to ensure whether is data available or not, before navigating to any route.
+
+
+Http Interceptor:
+Used to modify HTTP request before it is sent to server.
+Used to modify HTTP response before it is received by subscriber.
+Used to add custom headers to outgoing request, logging incoming response, catch error, etc.
+Implement HttpInterceptor interface and override intercept method.
+•	intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+		// do whatever you want with the HttpRequest
+		return next.handle(req);
+	}
+
+
+Karma Test Runner & Jasmine:
+describe('searchEmployees', () => {
+    it('should set response in employees',() => {
+      let response = { employeeList: [ {name: "Mounish"}, {name: "Shan"} ] };
+      let callServiceSpy = spyOn(httpService, 'callService').and.callFake(() => {
+        return from([response]);
+      });
+      component.searchEmployees();
+      expect(component.employees).toBe(response.employeeList);
+    });
+});
+
+
+----
+RxJS
+----
+• Observable:
+  Pushes multiple values to subscribers asynchronously.
+• Observer/Subscriber:
+  Consumes values pushed by Observable.
+• from, of:
+  Creates observable from an array.
+  Observable.of(1, 2, 3).subscribe(res => { });
+  Observable.from([1, 2, 3]).subscribe(res => { });
+• forkJoin:
+  Used to combine result of multiple observables.
+  When all observable completes, emits last value from each.
+• combineLatest:
+  Used to combine result of multiple observables.
+  When any observable emits a value, emit last value from each.
+• Subject:
+  Similar to Observable, Emits values to subscribers.
+• Behaviour Subject:
+  Requires initial value.
+• Replay Subject:
+  Emits all items that are emitted even before subscribing. Emits old values to new subscribers.
+• Async Subject
+  Only emits last value after execution completes.
+
+
+RxJS Pipeable Operators:
+• finalize
+• map
+• tap
+• filter
+• reduce
+• catchError
+• debounceTime
+• distinctUntilChanged
+• retry
+• repeat
+• concatMap
+• mergeMap
+• switchMap
+• exhaustMap
+
+
+Promise vs Observable:
+Promise emits single value. Observable emits multiple values over a period of time.
+Promise is eager. Observable is lazy. It is not called until we subscribe to it.
+Promise cannot be cancelled. Observable can be cancelled.
+
+

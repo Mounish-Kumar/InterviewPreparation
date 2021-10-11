@@ -1,0 +1,282 @@
+---
+ORM
+---
+Object Relational Mapping is a library used to query or manipulate data from DB using Java objects.
+
+Add Maven dependency for spring-boot-starter-data-jpa and mysql-connector-java
+
+In application.properties file,
+spring.datasource.url=jdbc:mysql://localhost:3306/sql_portfolio
+spring.datasource.username=root
+spring.datasource.password=password
+spring.jpa.hibernate.ddl-auto=update
+
+@Entity, @Table, @Id, @Column
+@GeneratedValue: To generate id for an entity.
+@CreatedDate & @LastModifiedDate: Auto persist date.
+@CreatedBy & @LastModifiedBy: If spring security is implemented, it will persist current logged in user.
+@Transient: Property with this annotation will not be saved in DB.
+@Embedded & @Embeddable: Can have reference in an Entity (Ex: Employee class has Name reference).
+
+Composite Keys:
+• @IdClass(AccountPK.class)
+  class Account {
+	@Id private int id;
+	@Id private int version;
+  }
+  AccountPK class should implement Serializable and have both fields.
+• class Account {
+	@EmbeddedId private AccountPK accountPK;
+  }
+  AccountPK class should have @Embeddable, implement Serializable and have both fields with @Column.
+
+Caching:
+If we want to access same data multiple times, instead of hitting DB everytime we can use cache.
+• First Level Cache:
+  Session level cache. Enabled by default.
+• Second Level Cache:
+  Session factory level cache.
+  Need external dependencies and configurations for second level cache (Ex: EH Cache, Swarm Cache).
+  @Cacheable
+  @Cache(usage=CacheConcurrencyStrategy.READ_ONLY)
+  Above annotations should be added to Entity that needs to be cached.
+
+Hibernate States (Persistence Lifecycle):
+• Transient:
+  Object is instanciated, but not yet persisted (attached to session/entity).
+• Persistent (Managed):
+  save() or persist() method will move object to persistent state.
+  Changes in object will reflect in DB while commiting the transaction.
+  get() or fetch() will move object directly to persistent state bypassing transient state.
+• Detached:
+  Closing the session will move object to detached state.
+  Object once attached to session/entity is now detached from persistent state.
+• Removed:
+  delete() method will move object to removed state.
+  Data is present in Java object but removed from DB.
+
+find, persist, merge are from JPA.
+get, save, update are from Hibernate.
+
+Get vs Load:
+• Get:
+  Returns null, when record not found.
+  First looks for data in session cache, if not present, fetches data from DB.
+• Load:
+  Throws ObjectNotFoundException, when record not found.
+  Initially returns proxy. Fetches data only when any method in entity class is called.
+
+Save vs Persist vs SaveOrUpdate:
+• Save:
+  Save returns primary key.
+  Can be used inside or outside transaction boundary.
+  While saving a detached object, it creates a new record in DB.
+• Persist:
+  Persist will return nothing.
+  Can be used only inside transaction boundary.
+  While persisting a detached object, it throws PersistenceException.
+• SaveOrUpdate:
+  INSERT or UPDATE based on the existence of record in DB.
+
+Update vs Merge:
+• Update:
+  Update will return nothing.
+  While updating a detached object, it throws NonUniqueObjectException.
+• Merge:
+  Merge returns newly updated instance.
+  While updating a detached object, it will update value in DB.
+
+@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="emp_id_generator")
+@SequenceGenerator(name="emp_id_generator", sequenceName="emp_id_seq", allocationSize=1)
+• AUTO: Selects generation strategy based on dialect
+• IDENTITY: Auto incremented DB column
+• SEQUENCE: DB sequence provides primary key value
+• TABLE: Uses DB table to simulate sequence
+
+CascadeType:
+If we perform some action on parent entity, same action will be applied to associated entity.
+ALL, PERSIST, MERGE, REMOVE, REFRESH, DETACH
+
+
+-----------
+Transaction
+-----------
+@EnableTransactionManagement
+@Transactional(propagation=Propagation.REQUIRED, isolation=Isolation.READ_COMMITTED)
+
+Propagation:
+• REQUIRED: If transaction exists, it will use existing transaction.
+  If not, it will create new transaction.
+• REQUIRES_NEW: It will always create a new transaction.
+• SUPPORTS: If transaction exists, it will use existing transaction.
+  If not, it will not create new transaction.
+• MANDATORY: If transaction exists, it will use existing transaction.
+  If not, it will throw exception.
+• NEVER: If transaction exists, it will throw exception.
+  If not, it will not create any transaction.
+• NESTED: If transaction exists, it marks a save point. And if exception occurs it will rollback to save point.
+  If transaction doesnot exist, it will create new transaction.
+• NOT_SUPPORTED: It will neither create new transaction nor use existing transaction.
+
+Concurrency Problems:
+• Dirty Reads: Reads the uncommitted change of a concurrent transaction.
+• Nonrepeatable Reads: Get different value on re-read of a row if a concurrent transaction updates the same row and commits.
+• Phantom Reads: Get different rows after re-execution of a range query if another transaction adds or removes some rows in the range and commits.
+
+Isolation:
+• DEFAULT: Default isolation level of RDBMS
+• READ_UNCOMMITTED: Suffers from Dirty Reads, Non-repeating Reads & Phantom Reads
+• READ_COMMITTED: Suffers from Non-repeating Reads & Phantom Reads
+• REPEATABLE_READ: Suffers from Phantom Reads
+• SERIALIZABLE: Most restrictive isolation level. 
+
+
+---------
+Hibernate
+---------
+Hibernate is an ORM implementation.
+org.hibernate package
+
+Configuration conf = new Configuration();
+SessionFactory sessionFactory = conf.buildSessionFactory();
+Session session = sessionFactory.openSession();
+Transaction transaction = session.beginTransaction();
+
+session.save(employee);						// Save Operation
+employee.setAge(30);						// Update since the object is in persistent state
+session.get(Employee.class, 101);			// Get by Id
+
+Query query = session.createQuery("from Employee where age < :myAge");		// For HQL
+query.setParameter("myAge", 29);
+List<Employee> employees = query.list();
+query.setCacheable(true);					// To enable second level cache for query
+
+Query query = session.createSQLQuery("select * from employee where age < 29");		// For SQL
+query.addEntity(Employee.class);
+List<Employee> employees = query.list();
+
+transaction.commit();
+session.close();
+sessionFactory.close();
+
+
+---
+JPA
+---
+Java Persistance API is just an ORM specification for Java.
+Switching between different implementations like Hibernate or EclipseLink is easy.
+Just have to change dependency in pom.xml file.
+javax.persistence package
+
+EntityManagerFactory emf = Persistence.createEntityManagerFactory("persistence_unit_name");
+EntityManager em = emf.createEntityManager();
+em.getTransaction().begin();
+
+em.persist(employee);					// Save Operation
+employee.setAge(30);					// Update since the object is in persistent state
+em.find(Employee.class, 101);			// Get by Id
+
+Query query = em.createQuery("Select e.name from Employee e");		// For JPQL
+List<Employee> employees = query.getResultList();		// For update or delete query, use query.executeUpdate();
+
+em.getTransaction().commit();	
+em.close();
+emf.close();
+
+
+---------------
+Spring Data JPA
+---------------
+Abstraction over JPA to reduce boilerplate code.
+
+To view spring boot h2 database console:
+localhost:8080/h2-console
+
+Extend JpaRepository & JpaSpecificationExecutor instead of CrudRepository,
+because JpaRepository extends PagingAndSortingRepository (provides useful methods for pagination and sorting)
+	Page<T> findAll(Pageable pageable)
+	Page<T> findAll(Specification<T> spec, Pageable pageable)
+Convert SearchRequest to PageRequest for pagination and sorting
+
+@Query(""): Supports only JPQL or HQL
+
+
+----
+JDBC
+----
+Java DataBase Connectivity is a Java API to connect and execute query with database.
+
+Steps to connect to DB:
+• Register driver class: Class.forName("oracle.jdbc.driver.OracleDriver");
+• Creating connection: Connection con = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:xe","admin","password") ;
+• Creating statement: Statement st = con.createStatement();
+• Executing query: ResultSet rs = st.executeQuery("select * from emp");
+  while(rs.next()) { rs.getInt(1)+"  "+rs.getString(1) }
+• Closing connection: con.close();
+
+Connection:
+Connection interface is a session between java application and database.
+Methods of Connection interface are commit(), setAutoCommit(boolean), rollback(), close().
+
+PreparedStatement:
+PreparedStatement interface is used to execute parameterized query. Faster performance.
+	PreparedStatement st = con.prepareStatement("insert into emp values(?,?)");
+	st.setInt(1, 289110);
+	st.setString(1, "Mounish")
+	st.executeUpdate();
+
+
+--------------------
+Relationship Mapping
+--------------------
+
+@Entity
+public class Employee {
+	@Id
+	private Long empId;
+	
+	private String name
+	
+	private Date dob;
+	
+	@OneToOne
+	@JoinColumn(name="aadhar_id")
+	private AadharCard aadhar;
+	
+	@OneToMany(mappedBy="emp", cascade=CascadeType.ALL)
+	private List<Address> addresses;
+	
+	@ManyToMany(mappedBy="employees", fetch=FetchType.EAGER)
+	private List<Skill> skillset;		// LAZY by default
+}
+
+@Entity
+public class Address {
+	@Id private
+	Long addId;
+	
+	private String doorNumber;
+	
+	private String street;
+	
+	private String city;
+	
+	@ManyToOne
+	@JoinColumn(name="emp_id")
+	private Employee emp;
+}
+
+@Entity
+public class Skill {
+	@Id
+	private Long skillId;
+	
+	private String skillName;
+	
+	private String version;
+	
+	@ManyToMany
+	private List<Employee> employees;
+}
+
+

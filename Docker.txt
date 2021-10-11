@@ -1,0 +1,199 @@
+------
+Docker
+------
+Platform for building, running and shipping application and all its dependencies in the form of containers.
+
+Advantages:
+• Able to run application uniformly across any platform or cloud.
+  If application works on local machine, it will work on any environment.
+• While setting up a project, no need to install or configure dependencies.
+  Simply bring up the application using one command.
+  Docker will download and run all the dependencies in a container.
+• Containers are lightweight because it shares the host OS unlike resource intensive Virtual Machines.
+  Each VM (Hypervisor) needs full blown Guest OS.
+
+Container:
+Isolated environment for running an application.
+Lightweight because it shares Host OS (Kernel).
+Container is like any other process running on our computer.
+
+On Linux machine, we can run Linux containers.
+On Windows machine, we can run Windows & Linux containers.
+On MacOS machine, Docker uses lightweight Linux VM.
+
+Image vs Container:
+Image is comprised of multiple layers. 
+Image has everything an application needs like runtime environment (Ex: Node), third party libraries, environment variables.
+Container is a running image.
+
+Docker Engine:
+client-server based application.
+• Server: Responsible for creating and managing Docker images, containers, networks, and volumes.
+• Client: CLI that allows us to interact with Docker using docker commands.
+
+Dockerfile:
+Set of instructions that Docker Engine uses to package an application to an image.
+Docker starts a container using image.
+We can push image to Docker registry (DockerHub) and pull it on any machine (production server) using Docker.
+
+Dockerfile for SpringBoot application:
+FROM openjdk:8
+WORKDIR /portfolio
+ADD target/portfolio.jar portfolio.jar
+EXPOSE 4000										# Expose port in container
+ENTRYPOINT ["java", "-jar", "portfolio.jar"]
+
+Dockerfile for Angular application:
+FROM node:11.15.0-alpine as build-stage
+WORKDIR /app
+COPY package.json ./
+RUN npm install
+COPY . .
+RUN npm run build --prod
+
+FROM nginx:1.16.0-alpine as run-stage
+COPY --from=build-stage /app/dist/mounish-portfolio /usr/share/nginx/html
+EXPOSE 3000
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
+
+
+Docker Compose:
+docker-compose is used for defining and running multi-container applications.
+
+docker-compose.yml:
+version: "3.8"									# docker-compose version
+services:
+	frontend:
+		build: ./frontend						# Folder where Dockerfile is present
+		image: mounish-portfolio:1				# Tag image with version
+		ports:
+			- 80:3000							# Map host and container ports
+	backend:
+		build: ./backend
+		image: portfolio:1
+		ports:
+			- 8080:4000
+		environment:
+			- DB_URL: mongodb://database/portfolio
+		command: ./backend/entrypoint.sh		# Run entrypoint script
+	database:
+		image: mongo:4.0-xenial					# Pull image from docker hub
+		ports:
+			- 27017:27017
+		volumes:
+			- portfolio: /data/db				# Volumes are storage outside containers
+volumes:
+	portfolio:
+
+
+Use --help to find command options
+
+
+---------------
+Docker Commands
+---------------
+docker build -t mounish-portfolio .			# Build Docker image
+docker build -t mounish-portfolio:3.2.1 .	# Build Docker image with tag
+docker images								# List Docker images
+docker image ls								# List Docker images
+docker image rm mounish-portfolio			# Remove Docker image
+docker image rm -f $(docker image ls -q)	# Remove all Docker images
+docker image prune							# Remove dangling images
+docker history mounish-portfolio			# Displays layers in image, used for performance improvements
+
+docker run -it mounish-portfolio			# Run Docker image in interactive mode and create a new conatiner
+docker run -p 80:3000 mounish-portfolio		# Run Docker image by mapping port 80 of host to port 3000 of container
+docker run -v $(pwd):/app mounish-portfolio	# Run Docker image with live reloading (volume mapping)
+docker run --name mounish mounish-portfolio	# Run Docker image and give container a name
+docker run -d mounish-portfolio				# Run Docker image in detached mode i.e. run in background
+docker ps								# List running containers or processes
+docker ps -a							# List all containers (including stopped containers)
+docker logs b06							# View container logs
+docker exec b06 sh						# Execute shell commands in running container
+docker stop b06							# Stop container
+docker start b06						# Start a stopped container
+docker container prune					# Remove stopped containers
+docker -f rm b06						# Remove a conatiner
+docker container rm -f $(docker container ls -aq)		# Remove all conatiners
+
+docker image tag b06 vmounishkumar/mounish-portfolio:3.2.1	# Update tag for pushing
+docker login												# Login to Docker
+docker push vmounishkumar/mounish-portfolio:3.2.1			# Push to hub.docker.com
+docker pull vmounishkumar/mounish-portfolio:3.2.1			# Pull docker image from hub.docker.com
+
+docker-compose build					# Build application
+docker-compose build --no-cache			# Build application without using cache
+docker-compose ps						# List all containers of the application
+docker-compose up						# Start application
+docker-compose up --build				# Start application after building
+docker-compose up -d					# Start application in background (detached mode)
+docker-compose down						# Stop and remove conatiners
+docker-compose logs						# View logs of all containers
+docker-compose logs b06					# View logs of a particular conatiner
+
+Virtual Private Server to deploy our application.
+Ex: Amazon Web Services, Google Cloud Platform, Microsoft Azure
+
+Install docker-machine from https://github.com/docker/machine/releases
+
+Docker Swarm is an orchestration tool by Docker.
+
+
+----------------
+CI/CD DEPLOYMENT
+----------------
+GitHub -> Jenkins -> DockerHub -> Kubernetes cluster
+• Team pushes code to Code Repository like GitHub or BitBucket.
+• Jenkins pulls the code, runs build and tests.
+• Jenkins builds docker image and push docker image to Docker Repository like DockerHub.
+• Docker image will be deployed in Kubernetes cluster.
+
+
+--------------
+Linux Commands
+--------------
+echo Mounish		# Print
+pwd					# Print working directory
+ls -1				# List files and directories with permissions
+ls -a				# List hidden files and directories
+cd ../..			# Go 2 levels up
+cd ~				# Go to home directory
+touch hello.txt		# Create new file(s)
+mkdir movies		# Create a new directory
+mv movies docker	# Rename a directory
+rm hello.txt		# Remove file(s)
+rm -r docker/		# Remove directory
+
+cat hello.txt		# See content of a file
+less hello.txt		# See content of a file pagewise
+q					# Escape from viewing content of file
+cat hello.txt > file1.txt		# Copy content from one file to other
+cat hello.txt file1.txt			# Concat content from different files
+
+grep hello file1.txt			# Search text in file(s)
+grep -i hello file1.txt			# Search text in file(s) by disabling case senstivity
+grep -ir hello .				# Search all files in current folder
+find -type f -iname "M*"		# Find all files whose filename starts with M
+
+printenv							# Print all environment variables
+echo db_user=Mounish >> .bashrc		# Set environment variable in bashrc file
+echo $db_user						# Print particular environment variable
+
+whoami								# Print current user
+useradd -m mounish					# Add new user
+cat etc/passwd						# Check users
+usermod -G developers mounish		# Modify mounish to group developers
+userdel mounish						# Delete user
+docker exec -it -u mounish <CONTAINER ID> bash			# Login as mounish
+groupadd developers					# Add new group
+chmod u+r hello.sh					# Give read permission to the file
+chmod g-w hello.sh					# Remove write permission to the file group
+
+ps					# List running processes
+kill <Process ID>	# Kill a process
+exit				# Terminate session
+
+Execute multiple commands in one go by seperating them with ; (or) && (or) ||
+Breakup long commands into multiple lines using backslash \
+
+

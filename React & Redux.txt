@@ -1,0 +1,220 @@
+--------
+REACT JS
+--------
+Virtual DOM:
+JavaScript updates the entire DOM even when a small part of DOM changes. DOM manipulation is slow in JavaScript.
+Virtual DOM is a lightweight copy of real DOM.
+Each time the data changes in react app, a new virtual DOM gets created.
+React finds exactly which virtual DOM objects have changed by comparing with pre-update snapshot.
+React then updates only the changed objects on the real DOM.
+
+
+JSX:
+JavaScript XML allows us to write HTML inside JavaScript.
+<React.Fragment></React.Fragment> is used to wrap elements, but it will not be rendered.
+
+
+Lifecycle Methods:
+• MOUNT
+	constructor(props)							// Initialize state
+	static getDerivedStateFromProps()			// Used to update state when prop changes
+												   We can't use this.setState() here, since this is a static method
+												   We have to return the updated state
+	render()									// Render component
+	componentDidMount()							// API calls
+• UPDATE
+	static getDerivedStateFromProps()
+	shouldComponentUpdate()						// Should return false, to avoid re-rendering static components
+	render()
+	componentDidUpdate(prevProps, prevState)	// Change of state or props
+• UNMOUNT
+	componentWillUnmount()						// Cleap up timers or listeners
+• ERROR BOUNDARY
+	static getDerivedStateFromError()			// Render fallback UI if error occurs at runtime
+	componentDidCatch()							// Log errors
+
+
+Error Boundaries:
+Runtime errors during rendering could break our application.
+Error Boundaries is used to catch errors and display a fallback UI.
+
+
+React Hooks:
+Before the introduction of React hooks, functional components were called stateless components.
+Functional components use React hooks to handle state. Class components cannot use React hooks.
+Call hooks only at top level. Don't call inside loops or conditions or nested functions.
+• useState
+  const [ name, setName ] = useState("Mounish");
+  Used to set state in functional components.
+  Returns array of 2 items. First is current state and second is a function to update the state.
+• useEffect
+  const myChild = useEffect(() => { }, []);
+  Used to execute some logic like http calls when dependency changes.
+  Accepts 2 arguments. First is function containing logic and second is dependencies.
+  Function will be called once while initial rendering. After that it will be called only when dependency changes.
+  If second argument is not given, it will be called for every re-render.
+  If second argument is [], it will be called only once after initial rendering.
+• useMemo
+  const myChild = useMemo(() => <MyChild />, []);
+  Used to cache output of function and use it for every re-render until dependency changes.
+  Accepts 2 arguments. First is function that should return something and second is dependencies.
+  Function will be called once while initial rendering. After that it will be called only when dependency changes.
+  If second argument is [], it will be called only once after initial rendering.
+• useCallback
+  const calculateSalary = useCallback(() => { }, []);
+  Difference with useMemo is in useCallback the function itself will be returned instead of value.
+• useRef
+  const inputRef = useRef();
+  inputRef.current.focus();
+  <input type="text" ref={inputRef} />
+  Used to reference input elements and set focus on textbox.
+
+
+Controlled Components:
+Value of input field is controlled by React.
+When user enters data in input field, onChange function gets triggered and we change the state.
+React re-renders the input field with new value.
+
+Uncontrolled Components:
+Value of input field is controlled by DOM itself.
+When user enters data in input field, React does not perform any action.
+We can use ref to access value of input field.
+	let inputValue = React.createRef();
+	return <input type="text" ref={inputValue} />;			// Can be accessed using inputValue.current.value
+
+Pure Components:
+A React component is pure if it renders the same output for same state and props.
+
+
+Props vs State:
+Props are immutable.
+State can be changed by calling setState method.
+Functional components use React hooks to handle state.
+State can be passed as Props to child components.
+
+Prop Drilling:
+Passing data from a component that is higher in hierarchy to a component that is deeply nested.
+To avoid prop drilling, we can use Context-API pattern.
+
+
+Synthetic Events:
+React provides a wrapper for browser's native event called synthetic events.
+<button onclick="saveEmployee()">Save</button>
+<button onClick={saveEmployee}>Save</button>
+
+
+Keys in list:
+Every element in an array should be provided with unique identity as key.
+Keys help react identify which elements were added, changed or removed.
+
+
+Strict Mode:
+• Identifying components with unsafe lifecycle methods.
+• Warning about the usage of legacy methods.
+const rootElement = document.getElementById("root");
+ReactDOM.render(<React.StrictMode><App /></React.StrictMode>, rootElement);
+
+
+How to prevent re-render?
+Any change in parent component will also re-render child components.
+To prevent re-rendering, we can return false in shouldComponentUpdate() method of child component.
+
+Performance Improvements:
+• Use useMemo() or shouldComponentUpdate() or PureComponent to prevent re-rendering.
+• Moving the state as close to where you need it as possible.
+• Lazy Loading
+  Split code to multiple bundles. Uses dynamic imports to achieve lazy loading.
+  const LazyComp = React.lazy(() => import('./lazyComp'));
+  <React.Suspense fallback={<div>Loading...</div>}>
+	<LazyComp />
+  </React.Suspense>
+
+
+Higher Order Component Pattern:
+Function that takes a component as argument and returns a new component.
+We might develop components that are quite similar to each other with minute differences.
+HOC is used to share common functionalities without repeating the code.
+const NewComponent = withHOC( OriginalComponent );
+
+
+Context-API Pattern:
+Used to share data between a tree of components, without having to pass data through props manually.
+• Create Context:
+	const NotesContext = React.createContext([]);		// Function accepts initial valie, but it is not mandatory
+• Provider:
+  Used to wrap tree of components that are going to access to our context.
+  Provider receives a prop called value, which can be accessed by all components wrapped inside Provider.
+	<NotesContext.Provider value={this.state.notes}>
+		...
+	</Notes.Provider>
+• Consumer:
+  Used to subscribe to context changes in class components.
+	render() {
+		return (
+			<NotesContext.Consumer>
+				{notes => <h1>{notes}</h1>}
+			</Notes.Consumer>
+		);
+	}
+• useContext:
+  Used to subscribe to context changes in functional components.
+	const notes = useContext(NotesContext);
+
+
+-----
+REDUX
+-----
+Library for managing application's state.
+
+Store: State of the application. Single source of truth (one store).
+
+Reducer: Pure functions to modify the state.
+
+Action: Only way to change state is by dispatching/firing actions.
+
+
+useReducer:
+No boilerplate code to connect Component to Redux Store.
+
+function todoReducer(todos, action) {				// Accepts initial state and action as parameters
+	switch (action.type) {
+		case "ADD_TODO":
+			return [ ...todos, action.payload.notes ];
+		case "DELETE_TODO":
+			return todos.filter((item, i) => i != action.payload.indexToDelete);
+		default:
+			return todos;
+	}
+}
+
+const [ todos, dispatch ] = useReducer(todoReducer, []);		// Accepts reducer function and initial state
+
+dispatch({ type: "ADD_TODO", payload: { notes: "Some text..." } });
+dispatch({ type: "DELETE_TODO", payload: { indexToDelete: 3 } });
+
+
+Immutability:
+An immutable variable can never be changed. To update its value, you have to create a new variable.
+Strings are immutable by default. When you change them, you create a new string and assign it to same variable.
+
+Pure Function:
+When a function does not mutate objects but just returns a new object.
+
+Immer:
+If state is mutable, React has to do deep equality check to find whether the state is changed or not.
+Also, producing a new state everytime is a boring, boiler-platy task.
+Immer is a third party library used to achieve immutablility in a convenient way.
+
+
+Redux Middleware:
+Action/reducer pattern is clean for updating the state within an application.
+But what if we need to communicate with an external API?
+What if we want to log all the actions that are dispatched?
+Middleware is a way to intercept dispatched actions before it reaches reducers.
+When action is dispatched, it will first go through middleware, then to reducer.
+Ex: Redux-Thunk, Redux-Saga
+
+
+Redux Toolkit:
+
+

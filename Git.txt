@@ -1,0 +1,53 @@
+Git: Distributed Version Control System (Track code changes)
+SVN: Centralized Version Control System
+
+GitHub, BitBucket, Stash are cloud based services to manage respositories.
+
+GUI Clients: SourceTree, Git Extensions
+
+Git BASH (Born Against Shell)
+
+.gitconfig file:
+All the configuration settings are stored in this file in C:\Users\Mounish
+
+Setup:
+git config --global user.name 'Mounish-Kumar'
+git config --global user.email 'vmounishkumar@gmail.com'
+
+Cloning a repository:
+git clone https://github.com/Mounish-Kumar/DataStructures.git
+
+Branches in a repository:
+git branch						# List branches (the asterisk denotes the current branch)
+git checkout -b [branch name]	# Create a new branch and switch to it
+
+Staging files:
+git add file1.js				# Stages a single file
+git add file1.js file2.js		# Stages multiple files
+git add *.js					# Stages with a pattern
+git add .						# Stages the current directory and all its content
+
+Removing files:
+git rm file1.js					# Removes from working directory and staging area
+git rm --cached file1.js		# Removes from staging area only
+
+Renaming or moving files:
+git mv file1.js main.js
+
+Viewing the status:
+git status
+
+Committing the staged files:
+git commit -m “Message” 		# Commits with a one-line message
+git commit						# Opens the default editor to type a long message
+
+Initialize a repository:
+git init
+
+Add a remote repository:
+git remote add origin https://github.com/Mounish-Kumar/DataStructures.git
+git push -u origin [branch name]	# Push changes to remote repository (and remember the branch)
+git push							# Push changes to remote repository (remembered branch)
+git pull							# Update local repository to the newest commit
+
+

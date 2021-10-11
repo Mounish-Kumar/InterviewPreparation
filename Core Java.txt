@@ -1,0 +1,653 @@
+Java is
+• Simple (No pointers)
+• Platform independent (Portable across many platforms like Windows, Linux, etc) Write Once Run Anywhere (WORA)
+• High level (Closer to human languages. Low level language example: Assembly language)
+• Robust/Strong (Exception handling, automatic memory management and garbage collection)
+• Secure (Compiled to byte code which is not easy to modify)
+• Object-oriented
+
+Java Versions:
+• 1.8: Lambda Expressions, Streams API, CompletableFuture & Improved DateTime API
+• 1.7: switch on strings, catching multiple exceptions by single catch
+• 1.6: @Override annotation
+• 1.5: Generics, annotations, enum, varags, enhanced for loops, static import
+• 1.4: assert, Regex
+• 1.2: strictfp, swing, Collections API
+• 1.1: Inner class, JDBC
+
+Running Java Code:
+• Compile classes:
+  Java compiler converts java code (.java file) to bytecode (.class file)
+  javac Sample.java
+• java Sample 12 ab (passing command line arguments)
+• java -jar HelloWorld.jar (to run a jar file)
+
+Java Virtual Machine Working:
+JVM basically loads, verifies and executes bytecode. JVM is divided into 3 main subsystems.
+• ClassLoader 
+• Runtime Data Area
+• Execution Engine
+
+ClassLoader:
+Loads, links, and initializes bytecode at runtime.
+• Loading:
+  Class files are loaded in this phase. There're 3 types of ClassLoader.
+  • Application/System ClassLoader:
+    Loads classes from classpath i.e. all classes that we write and dependencies
+  • Extension ClassLoader:
+    Loads jar files present in JRE\lib\ext directory.
+  • Bootstrap ClassLoader:
+    Loads rt.jar (runtime jar) which contains Core Java libraries like java.lang, java.util, java.sql, etc.
+• Linking:
+  • Verify:
+    ByteCodeVerifier verifies whether the generated class files are proper or not.
+	If verification fails, java.lang.VerifyError runtime exception is thrown.
+  • Prepare:
+    JVM allocates memory for class variables and assign them with default values.
+  • Resolve:
+    References variables are intialized from Method Area during this phase.
+• Initialization:
+  In this phase, static initializer gets intialized first.
+  Then all class variables with default values are replaced with original values.
+
+Runtime Data Area:
+• Method Area:
+  Stores metadata like class name, parent class name, method information, and variable information.
+  There's only one Method Area per JVM.
+• Stack Area:
+  Stores local variables and intermediate operations.
+  For every thread, a separate Stack will be created at runtime.
+  For every method call, one entry will be made in Stack memory called Stack Frame.
+  When the method invocation is complete, Stack Frame will be deleted.
+• Heap Area:
+  Stores objects, class variables, and arrays.
+  There's only one Heap Area per JVM.
+• PC Registers:
+  Stores address of the current executing instruction.
+  Once the instruction is executed, PC register will be updated with next instruction.
+  For every thread, a separate PC Registers will be created at runtime.
+• Native Method Stacks:
+  Stores native method information.
+  For every thread, a separate Native Method Stack will be created at runtime.
+
+Execution Engine:
+Bytecode which is assigned to the Runtime Data Area, will be executed by Execution Engine.
+Execution Engine reads bytecode and executes it piece by piece.
+• Interpreter:
+  Interprets bytecode faster but executes slowly.
+  Disadvantage is when one method is called multiple times, interpretation is required everytime.
+• JIT Compiler:
+  Neutralizes the disadvantage of Interpreter.
+  JIT Compiler compiles the entire bytecode to native code.
+  Whenever interpreter sees repeated method calls, JIT provides direct native code for that part.
+  So reinterpretation is not required, thus efficiency is improved.
+• Garbage Collector:
+  JVM runs Garbage Collector to remove unreferenced objects from heap memory.
+  If there're no references to an object in Heap memory, Garbage Collector will remove it automatically.
+  We can call Garbage Collector using
+  • System.gc();
+  • Runtime.getRuntime().gc();
+
+Java Runtime Environment:
+Provide runtime environment. Has JVM + set of libraries.
+
+Java Development Kit:
+Software development environment for building Java applications.
+Has JRE + development tools such as compiler, debugger, etc.
+
+Memory Leak:
+When unused objects occupy space in memory. Causes performance degradation over time.
+Throws OutOfMemoryError, which cannot be recovered.
+
+Memory Leak Causes:
+• Static fields remains in memory as long as the application is running.
+  Usage of static fields should be minimized, especially for collections.
+• Unclosed resources such as connection, file, streams, etc.
+• Improper equals() and hashCode() Implementations for Map or Set.
+
+Detect Memory Leaks:
+• Using Memory Profilers to monitor memory usage. Ex: JProfiler , Java VisualVM, etc.
+• Verbose Garbage Collection can be enabled to obtain detailed trace of GC.
+• Using Heap Dumps provide a snapshot of heap memory of Java application at a particular time.
+  Provide information on how many object instances are open and how much memory they consume.
+
+Runtime.getRuntime().freeMemory();		// To check free memory in bytes
+Runtime.getRuntime().totalMemory();		// To check total memory in bytes
+
+Main method:
+public static void main(String args[])
+public: To be accessible from JVM
+static: JVM needn't create object to call this method
+void main: Method signature called by JVM
+String args[]: To pass command line arguments. String can accept any datatype.
+
+Call by Value & Call by Reference:
+Primitive Data Types are copied by value and Reference Data Types are copied by reference.
+Java is call by value. 
+
+
+OBJECT-ORIENTED PROGRAMMING
+---------------------------
+Methodology to design a program using classes and objects.
+Simplifies the software development by providing concepts like:
+• Encapsulation: Grouping related variables and methods into a class to increase reusability.
+• Abstraction: Hiding implementation details and exposing only functionality to reduce complexity.
+• Inheritance: Child class inherit properties and methods of parent class to eliminate redundant code.
+• Polymorphism: Performing one action in different ways to avoid ugly switch case statements.
+
+
+ENCAPSULATION
+-------------
+Class:
+Collection of properties and functions. A blueprint for creating objects.
+
+Object:
+Instance of class.
+
+instanceof:
+Used to test if object is an instance of class or subclass or interface.
+
+Constructor:
+Cannot be final. Cannot be overridden. Cannot be called from a method using super or this keyword.
+If base class doesn’t have default constructor, child class’s constructor should call the parameterised constructor of base class using super keyword.
+
+this:
+Refers to current object.
+
+
+ABSTRACTION
+-----------
+Access Modifiers:
+• private (within class)
+• default (within package)
+• protected (within package and subclass of other packages)
+• public (anywhere)
+
+Abstract Class:
+Can have non abstract methods and must have at least one abstract method. Non abstract class cannot have abstract methods.
+If you are extending abstract class, you must implement abstract methods or make this class abstract.
+Cannot be instantiated. Cannot use abstract and final together.
+
+Interface:
+Used to achieve full abstraction, multiple inheritance, loose coupling (swap implementations).
+Interface variables are public static final and interface methods are public abstract by default.
+Class implements interface. Interface can extend multiple interfaces. No constructor.
+
+Marker interface (Tagged interface):
+Interface without any methods or variables.
+Used to provide type information about objects to JVM.
+Ex: Serializable, Cloneable, Remote etc.
+Serializable interface is to tell JVM whether we can serialize object or not.
+Cloneable interface is to tell JVM whether we can clone object or not.
+
+Serialization:
+Converting state of an object into byte-stream.
+Class whose object needs to be serialized, should implement Serializable interface.
+
+private static final long serialVersionUID = 1L;
+If the class is changed after serialization, when we try to deserialize the byte-stream,
+InvalidClassException will be thrown. This is due to mismatch in default serialVersionUID provided by JVM.
+To avoid InvalidClassException, we have to explicitly add serialVersionUID.
+
+Cloning:
+Creating exact copy of an object.
+Class whose object needs to be cloned, should implement Cloneable interface.
+Shallow copy by default. To create deep copy, should override clone method of Object class.
+
+
+INHERITANCE
+-----------
+IS-A:
+When one object acquires all properties and behaviours of parent object.
+Ex: Employee class extends Human class (Employee is a Human)
+
+HAS-A (Aggregation):
+If a class has entity reference, it is known as aggregation.
+Ex: Address reference in Employee class (Employee has an Address)
+
+Object class:
+Parent of all classes in Java. Methods in Object class are:
+String toString();
+int hashCode();
+boolean equals(Object obj);
+Object clone();
+final void notify();
+final void notifyAll();
+final void wait();
+final void wait(long timeout);
+void finalize();
+
+
+POLYMORPHISM
+------------
+Compile time polymorphism:
+Method overloading (Parameter must be different. Return type can be same or different)
+
+Run time polymorphism (Dynamic method dispatch):
+Method overriding (parameters and return type should be same)
+Variables cannot be overridden.
+While method overriding, subclass should have equal or less private access specifier when compared to superclass.
+
+Binding:
+Connecting a method call to a method body.
+• Static binding (Early binding): When type of object is determined at compile time.
+• Dynamic binding (Late binding): When type of object is determined at runtime.
+  Ex: List list = new ArrayList();
+
+
+SOLID Principles
+----------------
+To write more maintainable, understandable and testable code.
+
+• Single Responsibility Principle:
+  Class should have only one job.
+  
+• Open for Extension, Closed for Modification:
+  Instead of writing ugly switch case statements, implement interface & override methods.
+  interface Operation {
+	double calculate(double x, double y);
+  }
+  class AddOperation {
+	@Override double calculate(double x, double y) { return x + y; }
+  }
+  class MultiplyOperation {
+	@Override double calculate(double x, double y) { return x * y; }
+  }
+  
+• Liskov Substitution Principle:
+  Derived class must be able to substite base class.
+  interface Car {
+	void turnOnEngine();
+	void accelerate();
+  }
+  class MotorCar implements Car {
+	@Override void turnOnEngine() { }
+	@Override void accelerate() { }
+  }
+  class ElectricCar implements Car {
+	@Override void turnOnEngine() { throw new EngineNotFoundException(); }
+	@Override void accelerate() { }
+  }
+
+• Interface Segregation Principle:
+  Interface should be segregated in such a way that subclass should not have to implement extra methods that is not required.
+  interface Shape {
+	double calculateArea();
+	double calculateVolume();
+  }
+  class Cuboid implements Shape {
+	@Override double calculateArea() { }
+	@Override double calculateVolume() { }
+  }
+  class Square implements Shape {
+	@Override double calculateArea() { }
+	@Override double calculateVolume() { }	// Square doesn’t need calculateVolume() method
+  }
+
+• Dependency Inversion Principle:
+  Instead of creating salary object in Employee class and making it tightly coupled, we can pass the salary object.
+  Thus we can remove dependency between Salary and Employee.
+  class Employee {
+	Salary salary;
+	Employee(Salary salary) {
+		this.salary = salary;
+	}
+  }
+
+
+Static variables:
+Static variables are class variables. Local variable cannot be static.
+
+Static method:
+Cannot use non-static data member or call non-static method without creating object.
+'this' and 'super' keywords cannot be used. Static method cannot be overridden.
+
+Static block:
+Executed before main method.
+
+Instance initializer block:
+Will get executed when object is created for that class, before constructor is called, after super constructor is called.
+
+final variable:
+Value cannot be changed.
+Uninitialized final variable can be initialized in constructor.
+Uninitialized static final variable can be initialized in static block.
+
+final method:
+Cannot be overridden.
+
+final class:
+Cannot be inherited (all methods in final class are implicitly final)
+
+strictfp:
+Ensures that you will get same result on every platform if you perform operations in floating-point variable.
+This keyword can be applied to class, interface & method and cannot be applied to variables, constructors & abstract methods.
+
+Array:
+Collection of objects of similar data type. Fixed size. Array is an object.
+
+Enum:
+Data type that contains fixed size of constants.
+
+Variable arguments:
+If we dont know how many arguments needs to be passed to a method, varargs can be used.
+Variable argument should be the last argument for a method.
+There can be only one variable argument for a method.
+Ex: void display(int num, String... values)
+
+Inner class:
+Can access all members and methods of outer class, including private.
+Anonymous inner class (or Lambda expressions) should be used if you have to override method of a class or interface.
+Static nested class cannot access non static members and methods of outer class.
+
+AutoCloseable:
+If a class implements AutoCloseable interface, we need not close the file/connection explicitly in finally block.
+Java compiler will automatically close for us.
+try ( var reader = new FileReader(“sample.txt”) ) {   }   catch ( IOException e ) {   }
+
+
+STRING
+------
+String is immutable (cannot be changed).
+StringBuilder and StringBuffer are mutable.
+
+When you append strings, it creates new objects in string pool, thus consuming more memory in heap.
+StringBuffer & StringBuilder consumes less memory.
+StringBuilder is more faster than StringBuffer, when you append strings.
+StringBuffer is thread-safe i.e. all methods in StringBuffer are synchronized.
+Default capacity of StringBuffer is 16.
+If number of character increases from current capacity, then capacity = (oldcapacity * 2) + 2
+
+
+EXCEPTION
+---------
+Event that disturbs normal flow of program.
+Exception handling is to maintain normal flow of program.
+
+Throwable
+• Exception
+	• Compile time (Checked): If not handled, will throw compilation error.
+	  Ex: IOException, SQLException
+	• Runtime (Unchecked): Propagated in calling chain.
+	  Ex: ArithematicException, NullPointerException, ArrayIndexOutOfBoundException
+• Error is irrecoverable
+  Ex: OutOfMemoryError
+
+finally block will not be executed if program exits (Error).
+final is a keyword. finally is a block.
+finalize is a method used to perform cleanup before object is garbage collected. 
+
+throw vs throws:
+throw is used to explicitly throw an Exception, whereas throws is used to declare an exception.
+throw is used within a method, whereas throws is used in method signature.
+
+In method overriding,
+•	If superclass method does not declare an Exception, subclass overridden method can declare runtime exception,
+	but cannot declare compile time exception.
+•	If superclass method declares an Exception, subclass overridden method can declare same or subclass exception,
+	but not parent class exception.
+
+
+GENERICS
+--------
+Type safety, type casting is not required & compile time checking.
+Primitive data types cannot be used in Generics because they don’t extend Object class.
+
+Generic class:
+public class ArrayList<T> { }
+public class GenericList<T extends Comparable & Cloneable> { }
+
+Generic method:
+public <E> void printArray(E[] elements) {		// Use <E> if generics is not defined at class level
+	for(E element : elements)
+		System.out.println(element);
+}  
+
+Wildcards:
+Used to represent unknown types.
+• Unbounded: List<?> represents a list of unknown type
+• Upper Bounded: List<? extends Number> represents a list of Number or its sub-types such as Integer, Double
+• Lower Bounded: List<? super Integer> represents a list of Integer or its super-types Number and Object
+
+
+COLLECTION
+----------
+• Iterable interface
+	• Collection interface
+		• List interface
+		• Queue interface
+		• Set interface
+
+List:
+Duplicates allowed, ordered & null allowed.
+• ArrayList: Initial capacity is 10. When load exceeds 75%, capacity is increased by 50%.
+• LinkedList
+• Vector: Thread-safe. Initial capacity is 10. When vector is full, capacity is doubled.
+
+Queue:
+• PriorityQueue: Duplicates allowed, unordered & null not allowed.
+
+Set:
+Duplicates not allowed & null allowed.
+• HashSet: Unordered. Uses HashMap internally.
+• LinkedHashSet: Ordered
+• TreeSet: Sorted
+
+Map:
+Unique key
+• HashMap: Unordered, one null key & multiple null values.
+		   Initial capacity is 16. When load exceeds 75%, capacity is doubled.
+• LinkedHashMap: Ordered, one null key & multiple null values.
+• TreeMap: Sorted, no null key & multiple null values.
+• HashTable: Thread-safe, ordered, no null key & no null values.
+			 Initial capacity is 11. When load exceeds 75%, capacity is doubled.
+
+
+Comparable:
+Used to sort or compare objects of user defined class.
+User defined class needs to implement Comparable interface and override compareTo(Object o) method.
+Objects can be sorted based on only one data member.
+
+class Employee implements Comparable<Employee> {
+	int age;	String name;	long salary;
+	Employee (int age, String name, long Salary) { this.age=age; this.name=name; this.salary=salary; }
+	public int compareTo(Employee emp) {
+		if( age == emp.age ) return 0;
+		else if ( age > emp.age ) return 1;
+		else return -1;
+	}
+}
+
+Collections.sort(employeeList);
+
+
+Comparator:
+Used to sort or compare objects of user defined class.
+Does not affect the original class.
+Objects can be sorted based on any data member.
+
+Collections.sort(employeeList, (emp1, emp2) -> {	// Sorting based on age
+	if( emp1.age == emp2.age ) return 0;
+	else if ( emp1.age > emp2.age ) return 1;
+	else return -1;
+});
+
+Collections.sort(employeeList, (emp1, emp2) -> emp1.name.compareTo(emp2.name));		// Sorting based on name
+
+
+DESIGN PATTERNS
+---------------
+Industry standard approach to solve common problems.
+
+• Creational:
+  Concerned with how objects can be created.
+	• Singleton Pattern
+	• Factory Pattern
+	• Builder Pattern
+	
+• Structural:
+  Concerned with how classes and objects can be composed using inheritance and composition.
+	• Adapter Pattern
+	• Proxy Pattern
+	• Facade Pattern
+	
+• Behavioral:
+  Concerned with how objects communicate with eachother.
+	• Strategy Pattern
+	• Iterator Pattern
+	• Mediator Pattern
+	• Observer Pattern
+	• Chain of Responsibility Pattern
+	
+• Miscellaneous:
+	• DAO Pattern
+	• Dependency Injection Pattern
+	• MVC Pattern
+
+
+SINGLETON PATTERN:
+Restricts instantiation of class and ensures that only one instance of class exists in JVM.
+Ex: java.lang.Runtime#getRuntime()
+
+Implementation:
+• Private constructor to restrict instantiation of class.
+• Private static final variable has the only instance of class.
+• Public static method that returns instance of class.
+
+Eager initialization:
+Instance of Singleton Class is created at the time of class loading.
+
+Lazy Initialization:
+Instance of Singleton Class is created only while getting the instance.
+
+public static Example getInstance(){
+	if(instance == null) instance = new Example();
+	return instance;
+}
+
+Lazy Initialization works fine in single-threaded environment.
+If two threads are checking "if" condition at the same time, it will destroy singleton pattern.
+Both threads will create different instances of singleton class.
+To avoid this, we can make getInstance() method as synchronized.
+Synchronized method reduces the performance, because the method is locked while getting the instance.
+To avoid this, we can use synchronized block.
+
+public static Example getInstance(){
+	if(instance == null) {
+		synchronized(Example.class) {
+            if(instance == null)instance = new Example();
+        }
+	}
+	return instance;
+}
+
+Bill Pugh Singleton Implementation:
+When Example class is loaded, ExampleHelper class is not loaded into memory.
+Only when someone calls getInstance() method, ExampleHelper class gets loaded and creates Singleton class instance.
+
+public class Example {
+
+	private Example(){}
+
+    private static class ExampleHelper{
+        private static final Example INSTANCE = new Example();
+    }
+    
+    public static Example getInstance(){
+        return ExampleHelper.INSTANCE;
+    }
+}
+
+Using Reflection to destroy Singleton Pattern:
+Constructor[] constructors = Example.class.getDeclaredConstructors();
+for (Constructor constructor : constructors) {
+	constructor.setAccessible(true);
+	Example instanceTwo = (Example) constructor.newInstance();
+}
+
+Enum Singleton:
+Any enum value is instantiated only once in a Java program.
+
+Serialization and Singleton:
+Problem with serialized Singleton class is whenever we deserialize it, it will create a new instance.
+It destroys Singleton Pattern. To overcome this, we need to provide implementation of readResolve() method.
+protected Object readResolve() {
+    return getInstance();
+}
+After this, you will notice that hashCode of both the instances is same.
+
+
+FACTORY PATTERN:
+When we have a superclass with multiple sub-classes.
+Based on input, we need to return instance of one of the sub-class.
+Removes instantiation of class from client code and the responsibility is given to factory class.
+Ex: java.util.Calendar#getInstance(), java.text.NumberFormat#getInstance()
+
+public class ComputerFactory {
+	public static Computer getComputer(String type){
+		if("PC".equalsIgnoreCase(type)) return new PC();
+		else if("SERVER".equalsIgnoreCase(type)) return new Server();
+		else if("LAPTOP".equalsIgnoreCase(type)) return new Laptop();
+		return null;
+	}
+}
+
+
+BUILDER PATTERN:
+Used to build complex objects step by step.
+Ex: java.lang.StringBuilder#append(), java.lang.StringBuffer#append() 
+
+Builder pattern can be used when:
+• there're too many arguments to pass from client program to Factory class
+• some of the parameters are optional
+• the object is heavy and its creation is complex
+
+Implementation:
+• Constructor with required parameters.
+• Setter methods to set optional parameters and it should return the same Builder object.
+• build() method to return final object.
+
+
+ADAPTER PATTERN:
+Adapter is used to join two unrelated interfaces.
+Ex: java.util.Arrays#asList()
+
+PROXY PATTERN:
+Provide a substite (wrapper implementation) for controlled access of functionality.
+
+FACADE PATTERN:
+When number of interfaces grow and system gets complex,
+we can define a higher-level interface that makes the subsystem easier to use.
+
+
+STRATEGY PATTERN:
+When there're multiple algorithms, we let client pass the algorithm to be used as a parameter.
+Ex: Collections.sort() method takes Comparator parameter
+Based on different implementations of Comparator interfaces, objects get sorted differently.
+
+ITERATOR PATTERN:
+Provide a standard way to traverse through group of objects.
+Ex: Widely used in Java Collection
+
+MEDIATOR PATTERN:
+Provide a centralized communication medium between different objects in a system.
+If objects interact with each other directly, the objects are tightly coupled.
+
+OBSERVER PATTERN:
+when you want to get notified whenever there is any change in state of object.
+Object that watches the state of another object is called Observer.
+Object that is being watched is called Subject.
+
+JMS uses Mediator and Observer pattern to allow applications to subscribe and publish data.
+
+CHAIN OF RESPONSIBILITY PATTERN:
+A request from client is passed to a chain of objects to process them.
+Used to achieve loose coupling.
+Ex: Multiple catch blocks in try-catch
+When exception occurs in try block, it is sent to first catch block to process.
+If catch block is not able to process it, it forwards the request to next catch block.
+If even last catch block is not able to process it, exception is thrown outside of chain.
+Ex: ATM Dispense machine
+Machine dispense amount in terms of currency bills such as 100, 500, 2000 etc.
+
+

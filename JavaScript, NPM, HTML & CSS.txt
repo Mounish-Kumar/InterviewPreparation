@@ -1,0 +1,303 @@
+----------
+JavaScript
+----------
+ECMAScript is a specification for defining standards ES6 or ES2015.
+
+Add <script><script/> at the end of body.
+Because browser parses the file from top to bottom.
+If we put script in head, it will take long time to execute the scripts and create bad experience for user.
+
+Event Loop:
+JavaScript executes all operations in single thread.
+It has Event Queue to maintain sequence of operations for execution.
+It has Call Stack to maintain nested function calls.
+function processArray(bigArray, start) {
+	for(let i = start; i < BATCH_SIZE; i++) {
+		// Some operation
+	}
+	setTimeout(() => processArray(bigArray, start + BATCH_SIZE), 0);
+	// If there're other events while processing this array, they will get executed in the middle of each batch process
+}
+
+Web Worker:
+Used to run tasks in multiple threads.
+const worker = new Worker("script.js");
+
+JavaScript is a dynamic language, which means type of the variable can be changed at runtime.
+Ex: var name = 'Mounish'; // type of variable is string
+name = 1; // type of variaable in number
+
+Primitive types copied by value. Reference types copied by reference.
+
+Falsy values:
+undefined, null, 0, false, "", NaN
+
+Creating Object:
+• Object literal
+• Class
+• Constructor function
+	function Car(model, color) {
+		this.model = model;
+		this.color = color;
+	}
+	var car = new Car('BMW', 'red');
+• Object.create
+	var ElectricCar = Object.create(car, {
+		type: {
+			value: 'Electric',
+			writable: true,
+			configurable: false,
+			enumerable: true
+		}
+	});
+
+All objects inherit objectBase.
+All arrays inherit arrayBase which inherit objectBase.
+
+this:
+If method is inside object, 'this' refers to the object.
+If function is not in object, 'this' refers to window or global object.
+To change this reference inside calculateSalary function from window object to current object.
+const calculateSalary = calculateSalary.bind(this);
+
+Arrow function inherit 'this' from containing function. So, always use arrow function.
+
+Closure:
+Inner function has access to variables in parent scope even after parent is closed.
+Disadvantage: As long as closures are active, memory can't be garbage collected.
+
+Higher Order Functions:
+Function that accepts and/or returns another function.
+
+Hoisting:
+Moving all declarations to top of file before code execution.
+
+Async:
+The keyword async before a function makes function return a promise.
+
+Await:
+The keyword await before a promise makes function wait for the promise.
+The await keyword can only be used inside async function, since JavaScript is single threaded.
+
+async function myDisplay() {
+  let myPromise = new Promise((resolve, reject) => resolve("Success!"));
+  document.getElementById("demo").innerHTML = await myPromise;
+}
+
+OOPS:
+Encapsulation: Grouping related variables and functions into objects to increase reusability.
+Abstraction: Hiding implementation details and exposing only functionality to reduce complexity.
+Inheritance: Inherit properties and methods of parent (prototype) class to eliminate redundant code.
+Polymorphism: Performing one action in different ways to avoid ugly switch case statements.
+
+
+Promise:
+let myPromise = new Promise((resolve, reject) => {
+  // do async operation
+  resolve("Success!");
+  reject(new Error("Failed!"));
+});
+
+myPromise
+	.finally(() => { })
+	.then(res => { }, err => {  );
+
+myPromise
+	.finally(() => { })
+	.then(res => { })
+	.catch(err => { });
+
+Chaining multiple promises:
+promise1
+	.then(promise2)
+	.then(promise3);
+
+Promise.all vs Promise.allSettled:
+Promise.all waits for all promise to be resolved or any promise to be rejected.
+Promise.allSettled will never reject.
+
+Promise.any vs Promise.race:
+Promise.any is fulfilled even if first promise is rejected, but second promise is fulfilled.
+Promise.race is rejected if first promise is rejected.
+
+Object:
+Object.keys(emp);						// Get keys of an object (returns only instance members, not prototype members)
+Object.entries(emp);					// Get key-value pair as array
+Object.assign(empTarget, empSource);	// Clone object
+Object.defineProperty(this, 'firstName', {
+	get: () => firstName,
+	writable: false, 					// Makes the object readonly
+	enumerable: false, 					// Will not show in object.keys
+	configurable: false 				// Cannot delete this property
+});
+'firstName' in emp						// Check if the key is present in object
+
+
+Prototype:
+Every object and function has a property named prototype by default.
+If multiple objects are created, we can store functions in prototype to save memory.
+Employee.prototype.toString = () => "I am an employee";
+
+
+Array:
+arr.push(...items);							// Push item at the end
+arr.unshift(...items);						// Push item at the begining
+arr.pop();									// Remove last element
+arr.shift();								// Remove first element
+arr.splice(index, deleteCount, ...items);	// Push item at specific index
+arr.splice(index, deleteCount);				// Remove item at specific index
+arr.length = 0;								// Clear array
+arr.find(item => item.name == 'Mounish');
+arr.forEach
+arr.map
+arr.filter
+arr.sort
+arr.every
+arr.some
+arr.reduce((acc, item) => acc + item);
+
+Throttling:
+No matter how many times user fires event, function will be executed only once in a given time interval.
+
+Debouncing:
+No matter how many times user fires event, function will be executed only after specified time once user stops firing the event.
+
+Cookies vs localstorage:
+Cookies are for reading server-side, localstorage can only be read by client-side.
+Cookies gives 4096 bytes. localstorage gives 5MB per domain.
+Cookie has expiry, localstorage gets cleared while clearing browser cache/data.
+
+
+--------------------
+Node Package Manager
+--------------------
+JavaScript Engine in Chrome: v8
+JavaScript Engine in Firefox: SpiderMonkey
+
+Node:
+JavaScript v8 engine embedded in C++ program called Node.
+
+package.json "version": "major.minor.patch"
+(~) Tilde to install latest patch version
+(^) Caret to install latest minor version
+
+Babel:
+Transpiler to convert ES6 to ES5.
+
+Webpack or Parcel:
+Bundler which minifies and uglifies the code.
+
+
+----------
+HTML & CSS
+----------
+DOM:
+When a web page is loaded, browser creates a Document Object Model of the page.
+Treats XML or HTML document as tree structure where each node is an object.
+
+Non-sematic tags:
+Tells nothing about its content.
+• <div>
+• <span>
+
+Sematic tags:
+Clearly defines its content.
+• <header>
+• <footer>
+• <nav>
+• <form>
+• <table>
+• <article>
+• <section>
+• <mark>
+
+Switch in HTML:
+<label class="switch">
+  <input type="checkbox">
+  <span class="slider"></span>
+</label>
+
+Pseudo Class:
+:hover
+:focus
+:checked
+:disabled
+:read-only
+:required
+:first-child
+:first-of-type
+:last-child
+:last-of-type
+:nth-child(n)
+:nth-last-child(n)
+:nth-of-type(n)
+:nth-last-of-type(n)
+
+Pseudo Element:
+::before
+::after
+::selection
+::first-letter
+::first-line
+
+CSS Position:
+• static:
+  Default position. Positioned according to normal flow of the page.
+  Not affected by the top, bottom, left, and right properties.
+• relative:
+  Positioned according to normal flow of the page.
+  Affected by the top, bottom, left, and right properties.
+• fixed:
+  Positioned according to viewport. It stays in same place even if the page is scrolled.
+  The top, right, bottom, and left properties are used to position the element.
+• absolute:
+  Removed from normal flow and can overlap elements.
+  Positioned according to immediate parent. Moves along with page scroll.
+  The top, right, bottom, and left properties are used to position the element.
+• sticky:
+  Toggles between relative and fixed.
+  Positioned relative until it reaches offset, then it sticks (fixed) in place.
+
+CSS Display:
+• block:
+  Adds line-break after element.
+• inline-block:
+  Doesn't add line-break after element.
+  Allows to set width, height, margin & padding on element.
+• inline:
+  Doesn't add line-break after element.
+  Doesn't allow to set width, height, margin & padding on element.
+
+CSS Combinators:
+• descendant selector (space)
+• child selector (>)
+• adjacent sibling selector (+)
+• general sibling selector (~)
+
+Align Center:
+• Using flexbox
+  .center {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+  }
+• Using absolute position & margin auto
+  .container{
+	position: relative;
+  }
+  .element{
+	position: absolute;
+	margin: auto;
+	height: 30px; /*requires explicit height*/
+  }
+• Using absolute position & transform
+  .center {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+  }
+• Using line-height
+• Using padding
+
+

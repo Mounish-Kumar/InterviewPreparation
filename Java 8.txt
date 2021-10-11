@@ -1,0 +1,283 @@
+------------------
+Lambda Expressions
+------------------
+Functional Programming:
+In OOPS, we can only pass data to a method. What if we can pass a block of code to a method?
+More readable & parallel programming.
+Imperative programming specifies HOW things should be done.
+Functional (Declarative) programming specifies WHAT should be done.
+Higher Order Functions (Passing a function inside a function)
+
+Functional Interface:
+Can have only one abstract method, but can have any number of default methods.
+Example: Runnable, Comparable, Comparator
+
+Predefined functional interfaces are present in java.util.function
+Consumer<T>: void accept(T t)			Ex: forEach(consumer)
+Supplier<T>: T get()
+Predicate<T>: boolean test(T t)			Ex: filter(predicate)
+Function<T, R>: R apply(T t)			Ex: map(function), Comparator interface
+BinaryOperator<T>: T apply(T t, T t)
+UnaryOperator<T>: T apply(T t)
+
+.andThen(after) for chaining
+.compose(before) for chaining in reverse order
+
+Chain predicates using .and .or .negate
+
+Lambda Expressions:
+Anonymous inner class of functional interfaces can be replaced with lambda expressions.
+"this" reference in a method inside anonymous inner class points to the object of that inner class.
+Whereas "this" reference inside lambda expression points to the outer class.
+
+External loops (for, enhanced for)
+Internal loops (forEach) are faster
+forEach takes object of Consumer interface as paramater
+
+Intermediate methods: map, filter
+Terminate methods: forEach, findFirst
+
+Method Reference:
+Use :: after object, before method
+(a) -> System.out.println(a) can be replaced with System.out::println
+() -> emp.getFullName() can be replaced with Employee::getFullName
+(a) -> new Employee(a) can be replaced with Employee::new
+
+
+------------------------
+Default & Static Methods
+------------------------
+Default Methods:
+You can define default methods in interface.
+When a class implements 2 interface with same method, error will be shown. To solve it, the class should override that method.
+
+When a class extends another class and implements an interface, both the parent class and interface has same method.
+In this case, when you call that method from child class, the method from parent class will get called.
+The default method in interface will not be called. This is called third rule.
+
+When you write methods of Object class (like equals) inside interface as default methods, it will show error.
+
+Static Methods:
+Until Java 7, static methods are not allowed in interface.
+You needn't use default keyword to define static method in interface.
+
+
+-------------
+Date Time API
+-------------
+Date packages are not thread safe
+New Date Time API is immutable
+import java.time.*;
+LocalDate start = LocalDate.of(1991, Month.DECEMBER, 26);
+LocalDate current = LocalDate.now();
+Period.between(start, current).getYears();
+Similarly we also have LocalTime
+
+
+-----------
+Streams API
+-----------
+Process collection of data in a functional way
+list.stream()
+list.parallelStream()		// Utilizes multiple core of the processor. Faster. Order is not maintained.
+							// Uses common thread as well as threads from ForkJoinPool
+
+int[] numbers = { 1, 2, 3 };
+Arrays.stream(numbers);
+
+Stream.of(1, 2, 3);
+Stream.generate(() -> Math.random());
+Stream.iterate(1, n -> n + 1);
+
+map: to transform values in streams
+flatMap: to flatten the stream of lists
+
+Intermediate operations: returns a new pipe
+Ex: map, flatMap, filter, limit, skip, sorted, distinct, peek
+
+Terminal operations: no return type void
+Ex: forEach, all the reducers
+
+To sort employeeList based on name:
+employeeList.stream()
+	.sorted((a, b) -> a.getName().compareTo(b.getName()))		// Comparator interface
+	.forEach(emp -> sysout(emp.getName()));
+
+To sort employeeList based on name in descending order:
+employeeList.stream()
+	.sorted(Comparator.comparing(emp -> emp.getName()).reversed())		// Comparator.comparing(Employee::getName)
+	.forEach(emp -> sysout(emp.getName()));
+
+Reducers:
+Optional<Long> totalSalary = employeeList.stream().map(e -> e.getSalary()).reduce((a, b) -> a + b);
+sysout(totalSalary.orElse(0));
+Ex: count returns Long,
+	anyMatch(predicate), allMatch(predicate), noneMatch(predicate) returns boolean,
+	findFirst, findAny returns Optional<Employee>,
+	max(comparator), min(comparator) returns Optional<Employee>,
+	reduce(binaryOperator) returns Optional<Long>
+
+optional.orElse("summa");		// Null check
+
+Collectors:
+Map<Long, Employee> employeesMap = employeeList.stream().collect(Collectors.toMap(e -> e.getEmpId(), e -> e));
+
+Collectors.summarizingLong(e -> e.getSalary());  // To get statistics like count, min, max, average
+
+Collectors.joining(", ");  // To concat values in stream
+
+Map<String, List<Employee>> employeesByTeam =
+		employeeList.stream().collect(Collectors.groupingBy(e -> e.getTeamName()));
+
+Map<Boolean, List<Employee>> middleAgeEmployees = 
+		employeeList.stream().collect(Collectors.partitioningBy(e -> e.getAge() > 35));
+
+
+---------------
+Multi-threading
+---------------
+Process:
+Instance of an application.
+One OS can run many process concurrently.
+Each process has its own memory.
+
+Threads:
+Smallest unit of a process.
+Each process has atleast 1 thread called main thread.
+We can create additional threads to run multiple tasks concurrently.
+One thread can communicate with other threads of same process.
+If exception occurs in one thread, it doesnot affect other thread.
+Threads share common memory, so context switching takes less time.
+
+Thread Scheduler:
+If we create more threads than available, Scheduler swicthes between threads giving each thread a slice of CPU time.
+Schedule which thread should run when and how long.
+
+Sysout(Thread.activeCount());  // Prints 2 i.e. number of active threads in current process.
+One is main thread running main method and another is background thread for garbage collection.
+
+Sysout(Runtime.getRuntime().availableProcessors());  // Print number of available threads
+
+Sysout(Thread.currentThread().getName());  // Print current thread
+
+Creating a new Thread:
+FileDownload class should implement Runnable interface and override run() method.
+Thread thread = new Thread(new FileDownload());
+thread.start();
+If we start a thread twice, one thread will run and other will throw IllegalThreadStateException.
+Calling start() methods starts a new thread. Calling run() runs in main thread.
+
+Pausing a thread:
+try { Thread.sleep(5000); } catch ( InterruptedException e ) {  }		// Write this in run() method
+
+Joining a thread:
+thread.join();		// Current thread wait for another thread to complete
+
+Interrupting a thread:
+thread.interrupt();		// Doesn't stop the thread execution. Just sends interruption request. Upto to the thread to cancel it or not.
+
+
+-------------------------------------------------
+Concurrency Issues & Strategies for Thread safety
+-------------------------------------------------
+Race Condition:
+When multiple threads trying to modify shared data at the same time.
+
+Visibility Problem:
+When one thread changes the shared data, but the changes are not visible to other threads due to caching.
+
+Thread-safe class means they can be safely used across multiple concurrent threads.
+
+Confinement:
+Each thread should have its own data. Should not share data.
+
+Immutability:
+Sharing immutable objects between threads is safe, because it can only read, not modify.
+
+Synchronization:
+Prevent multiple threads from accessing the same objects concurrently using locks.
+Deadlock: When two threads wait for eachother indefinitely.
+
+Volatile:
+Using volatile keyword while declaring a variable will always read the value from main memory, not from cache.
+Solves Visiblity problem.
+
+Wait & Notify:
+obj.wait() will wait for the other thread to notify.
+obj.notifyAll() will notify all the waiting threads.
+
+Atomic Objects:
+Use Atomic classes. Solves Race condition.
+Ex: AtomicInteger, AtomicLong, AtomicBoolean, AtomicIntegerArray
+
+Concurrent Collections:
+Uses partitioning technique for concurrency. Solves Race condition.
+Ex: ConcurrentHashMap, ConcurrentLinkedQueue
+
+
+---------------
+ExecutorService
+---------------
+Thread Pool:
+Pools of threads to execute tasks. Once a thread finishes, it is returned back to pool so that it can be reused.
+If all threads are busy, the new tasks will wait in a queue.
+Once a thread is available it will pickup a task from the queue for execution.
+
+Thread Pool is represented using ExecutorService and its implementations.
+
+ExecutorService threadPool = Executors.newFixedThreadPool(3);
+Future<?> future = threadPool.submit(() -> {
+	Thread.sleep(3000);
+	return "Success!";
+});
+String result = future.get();	// get() is a blocking method. Current thread has to wait until it returns a result.
+threadPool.shutdown();
+
+threadPool.submit(Runnable)		// Runnable: void run()
+threadPool.submit(Callable)		// Callable<V>: V call()
+
+
+-----------------
+CompletableFuture
+-----------------
+CompletableFuture implements Future, CompletionStage
+
+ForkJoinPool.commonPool();		// CompletableFuture uses common thread pool if we don't pass second argument
+
+CompletableFuture<String> future = CompletableFuture.runAsync(() -> System.out.println("Your task here!"));
+CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> "Mounish");
+
+Handle exception:
+future.exceptionally(ex -> "Karadi");		// Returns default value on exception
+
+Timeout:
+future.orTimeout(3, TimeUnit.SECONDS);
+future.completeOnTimeout("Karadi", 3, TimeUnit.SECONDS);	// Returns default value on timeout
+
+Transform result:
+future.thenApply(res -> "Mr." + res);
+
+Run on completion:
+future.thenRun(() -> System.out.println("Second task here!"));			// Runs second task in main thread
+future.thenRunAsync(() -> System.out.println("Second task here!"));		// Runs second task in new thread
+
+Pass result on completion:
+future.thenAccept(res -> System.out.println("Name is " + res));			// Runs second task in main thread
+future.thenAcceptAsync(res -> System.out.println("Name is " + res));	// Runs second task in new thread
+
+Chaining tasks:
+future.thenCompose(name -> CompletableFuture.supplyAsync(() -> "Hello " + name))
+	  .thenCompose(greet -> CompletableFuture.supplyAsync(() -> greet + "!"));
+
+Combining result of two async calls:
+task1.thenCombine(task2, (res1, res2) -> res1 + res2);
+
+Combining result of multiple async calls:
+CompletableFuture.allOf(task1, task2, task3)
+				 .thenRun(() -> System.out.println(task1.get() + task2.get() + task3.get()));
+
+Getting fastest result:
+CompletableFuture.anyOf(task1, task2)
+				 .thenAccept(res -> System.out.println(res));
+
+

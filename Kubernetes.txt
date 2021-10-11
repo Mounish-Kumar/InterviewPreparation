@@ -1,0 +1,185 @@
+----------
+KUBERNETES
+----------
+Kubernetes is an container orchestration engine.
+Used to run, monitor and manage containerized applications in cluster of nodes.
+
+Advantages:
+• Hight Availability (Zero downtime)
+• Scalability
+• Disaster Recovery (Backup & restore)
+• Automatic Deployment
+
+Kubernetes Architecture:
+Two types of Node.
+• Master Node
+• Worker Node
+
+Master Node:
+Every Master Node have 4 processes running on them.
+• API Server:
+  Gatekeeper for authentication.
+  Exposes REST APIs that can be used to communicate with Kubernetes.
+  If we want to schedule new Pods, create new Service, query deployment status we have to request API server.
+  Kubectl client can be used to communicate with API server.
+  When multiple Master Nodes are present, requests to API Server are load balanced.
+• Scheduler:
+  When we request API Server to create new Pods, it validates the request and hand it over to Scheduler.
+  Scheduler schedules Pod creation based on resources available (CPU, RAM & Storage) in Worker Nodes.
+  Scheduler just schedules the Pod creation. Kubelet gets request from Scheduler and executes it on that Node.
+• Controller Manager:
+  Detects when Pods die on any Node and tries to recover cluster state by re-scheduling Pod creation.
+• etcd:
+  Key-value database of cluster state.
+  Used to store all information about Master and Worker Nodes.
+  Every change in cluster (when a Pod dies or when new Pod gets scheduled) get saved or updated in etcd.
+  Application data are not stored in etcd.
+  When multiple Master Nodes are present, etcd provides distributed storage across all Master nodes.
+
+Worker Node:
+Each Worker Nodes has multiple Pods running on it.
+Every Worker Node have 3 processes running on them.
+• Container Runtime:
+  Docker
+• Kubelet:
+  Starts Pod with container inside. Kubelet interacts with both Node and Container.
+• KubeProxy:
+  Forwards requests from Services to Pods.
+
+Pod:
+Smallest unit of Kubernetes. Abstraction over container.
+Dockerized applications are deployed inside Pod in Worker Node.
+Usually one container will run in each Pod, but we can also run multiple containers.
+
+Service:
+Each Pod has its own IP address. Pods can communicate with eachother using IP Address.
+But when a Pod dies, new Pod gets created and a new IP address will be assigned.
+So we have to change IP address everytime when a Pod restarts. To avoid this, we can use Service.
+Service is permanent IP address. Each Pod has its own Service.
+Lifecycle of Pod and Service is not connected.
+Even if Pod dies, Service will remain, so we needn't change IP address.
+Pods communicate with eachother using Service.
+
+Ingress:
+To access our application from browser, we can use External Service.
+But the URL of External Service has only Node IP address and port number. Ex: http://124.89.101.2:8080
+Ingress is used to map domain name https://www.mounish.dev to Service.
+Ingress forwards requests from browser to Service.
+
+ConfigMap:
+If we keep configurations like database url in application.yml, when the configuration changes:
+• we have to rebuild the application with new version
+• push it to repository
+• pull new image in Pod
+• restart the Pod
+Kubernetes has ConfigMap to store external configuration of application.
+Use configuration from ConfigMap as environmental variables or as properties file.
+Now when the configuration changes, we just have to change the ConfigMap.
+
+Secret:
+Keeping database username and password in ConfigMap is insecure.
+Kubernetes has Secret to store sensitive data like credentials, SSH certificates, tokens, etc.
+The data is stored in base64 encoded format.
+Use configuration from Secret as environmental variables or as properties file.
+
+Volume:
+If we keep the database inside Pod, when the Pod restarts data will be lost.
+Kubernetes has Volume to plug external storage on harddrive to Pod.
+Now when the database Pods gets restarted, all the data will remain.
+
+Replica:
+If Pod dies, the application shouldn't have downtime.
+Instead of relying on one application Pod or one database Pod, we should replicate everything in another node.
+Replica is also connected to same Service.
+Service also acts as load balancer and route traffic to Node which is less busy.
+
+Deployment:
+Abstraction for creating Pods, where we can specify number of Replicas for each pod.
+DEPLOYMENT( REPLICASET( POD( CONTAINER( APP ) )))
+
+StatefulSet:
+We can't replicate database Pod using deployment.
+Because when multiple Replicas access shared database, we might get data inconsistency issues.
+Stateful applications like database should be created using StatefulSet.
+StatefulSet takes care of replicating database Pods.
+StatefulSet makes sure that database reads and writes are synchronized to avoid concurrency issues.
+
+Minikube:
+Setting up cluster on local machine is very difficult.
+With Minikube, both Master and Worker runs on single Node.
+Can be used for testing on local machine.
+Minikube CLI is used for start up or deleting the cluster.
+
+Kubectl:
+Command line tool to interact with Kubernetes cluster via API Server.
+Kubectl CLI is used for configuring the Minikube cluster.
+We can also use UI dashboard or REST API to talk to API Server.
+
+Setup:
+• Minikube needs Virtualization. Install Hypervisor like Docker or Hyper-V or VirtualBox.
+• Install Minikube
+• minikube start --driver=docker
+
+Kubectl Commands:
+https://gitlab.com/nanuchi/youtube-tutorial-series/-/blob/master/basic-kubectl-commands/cli-commands.md
+
+
+---------------
+deployment.yaml
+---------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+	name: nginx-deployment
+	labels:
+		app: nginx
+spec:
+	replicas: 2
+	selector:
+		matchLabels:
+			app: nginx
+	template:
+		metadata:
+			labels:
+				app: nginx
+		spec:
+			containers:
+			- name: nginx
+			  image: nginx:1.16
+			  ports:
+			  - containerPort: 8080
+		
+status: 	# Automatically generated by Kubernetes
+			# Current status will be continuously compared with specification to maintain the state
+			# Status data are stored in etcd
+
+
+------------
+service.yaml
+------------
+apiVersion: v1
+kind: Service
+metadata:
+	name: nginx-service
+spec:
+	selector:
+		app: nginx		# Connect Service to Deployment or Pod using selector
+	ports:
+		- protocol: TCP
+		  port: 80				# Service is listening to port 80
+		  targetPort: 8080		# targetPort should be same as containerPort of Deployment
+
+
+-----------
+secret.yaml
+-----------
+apiVersion: v1
+kind: Secret
+metadata:
+	name: mongodb-secret
+type: Opaque
+data:
+	mongo-root-username: <base64 encoded value>
+	mongo-root-password: <base64 encoded value>
+
+

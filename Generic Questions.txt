@@ -1,0 +1,98 @@
+Tell about yourself:
+• I'm working as a Senior Digital Engineer at Centrico, which is the IT division of a leading Bank in Italy called Banca Sella.
+• I've over 7 years of experience in developing and maintaining enterprise applications.
+• My primary skillset is Java with Spring Boot, Angular, React and Hibernate.
+• I also have little bit of experience in Microservices.
+• Throughout my career I've worked completely on Banking and Fintech projects.
+• That's pretty much about me.
+
+Tell about your day to day activities:
+• We start the day with a quick meeting where we breif about what we've done yesterday and what we'll be doing today.
+• We'll also discuss about the blockers, if we're facing any.
+• All the requirements and activities will be split into Jira tickets.
+• We'll pick a ticket based on priority and start working on it.
+• Before proceeding to code, we'll write Functional Test Cases.
+• Then we'll create a feature branch in BitBucket and start coding.
+• Once the coding is done, we validate it against FTC.
+• Then we write Unit Testcases. 70% coverage is mandatory in our organization.
+• Then we'll commit our code and create a pull request to "develop" branch.
+• The pull request is reviewed by peers or our Team Lead before approving.
+• Once it is approved, we merge it and give release to TEST environment.
+• Then we do a round of peer testing.
+• Finally it is moved to further environments.
+
+Biggest challenge you've faced:
+• I was working on multiple UI projects, where I realized that we're more or less repeating the same set of code.
+• Every application had a navigation bar, a breadcrumb and pages for doing CRUD operations.
+• These CRUD pages were similar, it had a table to show the list. Search textbox for filtering.
+• Every row had a Edit and delete icon. Add button to add a new record.
+• Instead of rewriting the same code again and again for every functionality, we created generic components.
+• So the developer needn't write any HTML code, he can just give everything as a configuration.
+• Our components will read these configurations and render the pages.
+• Working on this was a very big challenge, because we had to write everything generic.
+
+Common problems you've faced:
+When there're some reoccuring problem, we provide a solution.
+Reporting:
+• Our business team will ask us for multiple reports to make business decisions.
+• Everytime we used to develop a separate REST service for generating a report.
+• Then we created generic Reporting services.
+• Everything needed for report generation can be configured in backoffice itself.
+	• How often the report should be generated (once, daily, weekly, monthly or yearly), start date, end date.
+	• To whom the generated reports should be sent (To mail id, Cc mail id), mail subject, mail body.
+	• Query used to generate report
+	• Attachment format (CSV, Excel & HTML)
+	• Timeout duration
+• A reporting batch runs every morning and evening. It will read our request, generate report and mail it.
+• If a request fails in the morning batch, it will be re-executed in the evening.
+• Once we released this feature, the business team didn't come to us again for reports.
+CORS Issue:
+• Due to browser's same-origin policy, we were facing CORS issue in our UI.
+• We created a wrapper service which gets url, body, method & headers as requestBody.
+• Instead of making the call directly, we call wrapper service, it will call real service and send us the response. 
+
+Best practises you follow:
+• For every release, we maintain documentations like FTC & RTM in wiki page.
+• We write Unit testcases and maintain 70% coverage for our codebase.
+• We fix all the critical & blocker SONAR violations (Severity: Info, Minor, Major, Critical & Blocker)
+• Code review before merging
+• Peer testing
+• Our application is process dependent, not person dependent. Atleast 2 person is responsible for every functionality.
+
+Code Review:
+• Code formatting
+• Naming convention of class, methods and variables
+• Package structure
+• Are null checks and edge cases handled properly?
+• Does every class follow Single Responsibility principle? Class and method segregation
+• Exception management
+• Transaction management
+• SONAR
+• Unit testcases
+
+SONAR Issues:
+• Unused imports
+• 
+
+Performance Improvements:
+FE:
+• Lazy loading using dynamic imports
+• Preloading
+• Source tree mapper
+• React: shouldComponentUpdate() or PureComponent or useMemo()
+BE:
+• Time taken for each service using AOP
+• Time taken for external call using AOP
+• Lazy fetch
+• Cache frequently used queries
+• EH Cache
+• Instead of making DB calls in loop, use saveAll()
+• Check if slowness is due to filter or AOP or interceptor
+DB:
+• Indexing to improve performance of a query
+• Stored procedure
+• Partition
+• Explain plan
+• Materialized view instead of View
+
+

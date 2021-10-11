@@ -1,0 +1,496 @@
+• 12 Factor App
+• Service Discovery
+  Eureka, Consul, Zookeeper
+• Load Balancing
+  Ribbon
+• Fault Tolerance, Resilience (Circuit Breaker, Bulkhead)
+  Hysterix, Resilience4j
+• Centralized Config
+  Spring Cloud Config
+• API Gateway (Rate Limit, Throttling, Queue)
+  Zuul, Axway
+• Distributed Tracing
+  Sleuth, Zipkin, Dynatrace, ELK Stack
+• Distributed Transaction
+  SAGA
+• Distributed event messaging system
+  KAFKA
+• Kubernetes
+
+
+-------------
+12 FACTOR APP
+-------------
+ 1) Codebase
+	Only one codebase per application tracked in revision control like Git, SVN.
+ 2) Dependencies
+	Explicitly declare and isolate dependencies.
+	Dependencies should be separated from application by declaring it in pom.xml or package.json or gradle.
+	During build, dependencies will be downloaded from Maven repository.
+ 3) Config
+	Config should not be hardcoded in the application.
+	Config varies across environments, but code doesnot. Config must be separated from code.
+ 4) Backing Services
+	Backing service is any service the app consumes over network. Ex: DB, Messaging System, SMTP, etc.
+	Treat backing services as plug and play resources. Backing services should be loosely coupled to application.
+ 5) Build, release, run
+	Strictly separate build, release and run stages.
+	Code changes should always go through CI/CD pipeline.
+ 6) Processes
+	Application should be stateless. Request information should not be stored in application memory.
+	It should be stored only in DB. Sticky sessions are a violation of 12 factor.
+ 7) Port binding
+	Application should have inbuit server instead of deploying on external server. Services will be exposed via port.
+	Ex: Spring Boot App has embedded Tomcat server.
+ 8) Concurrency
+	Application should be able to scale horizontally to handle high load.
+	Vertical scaling means increasing memory and computing power.
+	Horizontal scaling means adding servers in resource pool.
+ 9) Disposability
+	Application's starup time should be fast, so that it is easy to scale up horizontally.
+	App should shutdown gracefully i.e. app should complete current tasks and then shutdown.
+10) Dev/prod parity
+	Development, QA, Production should be similar. Development to production release should be quick.
+	Every commit is a candidate for production. Use Docker.
+11) Logs
+	Logs should not be stored in localdisk, because if application crashes, logs in localdisk will be lost.
+	Treat logs as event streams and send them to centralized server. Use ELK stack.
+12) Admin processes
+	Business application and admin tasks should be separated.
+	Admin tasks like batches, DB migration should be triggered using API instead of running directly in production.
+
+
+-------------------------
+SERVICE DISCOVERY: EUREKA
+-------------------------
+Why hard-coded URLs are bad?
+• Service instances are assigned network locations dynamically in cloud
+• Load balancing
+• Multiple environments
+
+Service Registry Pattern:
+Service instance registers its network location using a POST request when it starts up.
+Every 30 seconds, service instance must refresh its registration using a PUT request (heartbeats).
+A registration is removed by using a DELETE request.
+Client can retrieve the registered service instances by using GET request.
+Ex: Netflix Eureka, Consul, Apache Zookeeper, ETCD
+
+spring.application.name=employee-demo
+@EnableEurekaClient
+@LoadBalanced over RestTemplate bean (or) use FeignClient
+
+Client-Side Service Discovery:
+Client gets all the available instances of a service from service registry.
+Client uses load-balancing algorithm to select one of the available instances.
+
+Server-Side Service Discovery:
+Client makes request to load balancer.
+Load balancer gets all the available instances from service registry and performs routing.
+
+Load Balancer:
+Distributes incoming traffic evenly across instances.
+
+Client-Side Load Balancer:
+Round robin or zone specific algorithm
+Ex: Netflix Ribbon (works with Eureka to load balance across multiple instances)
+
+Server-Side Load Balancer:
+Round robin or sticky session algorithm
+Ex: AWS Elastic Load Balancer, NGINX
+
+
+-------------------------
+FAULT TOLERANCE: HYSTERIX
+-------------------------
+A microservice needs to be resilient to failures.
+They should have the ability to recover from failures and continue to function.
+
+Timeout:
+While creating RestTemplate bean
+	var requestFactory = new HttpComponentsClientHttpRequestFactory();
+	requestFactory.setConnectTimeout(3000);
+	var restTemplate = new RestTemplate(requestFactory);
+
+Circuit Breaker Pattern:
+Do not hammer a service with additional requests which is already down. Give the service time to recover.
+Circuit trip depends on following parameters
+• Last n requests to consider for decision
+• How many % should fail?
+• Timeout duration
+• How to handle request during break time? Fallback
+• How long after circuit trip to try again?
+Ex: Netflix Hysterix, Resilience4j
+
+@EnableCircuitBreaker
+@HystrixCommand(
+	fallbackMethod="getHardcodedEmployee",
+	commandProperties={
+		@HysterixProperty(name="execution.isolation.thread.timeoutInMilliseconds", value="3000"),
+		@HysterixProperty(name="circuitBreaker.requestVolumeThreshold", value="10"),
+		@HysterixProperty(name="circuitBreaker.errorThresholdPercentage", value="50"),
+		@HysterixProperty(name="circuitBreaker.sleepWindowInMilliseconds", value="5000")
+	}
+)
+
+Bulkhead pattern:
+Excessive load or failure in one service should not affect other services.
+Each service have separate thread pools, so that no service occupies all the available threads.
+
+@HystrixCommand(
+	fallbackMethod="getHardcodedEmployee", threadPoolKey="getEmployeePool",
+	commandProperties={
+		@HysterixProperty(name="coreSize", value="10"),			// How many threads to allocate
+		@HysterixProperty(name="maxQueueSize", value="5")		// How many requests to wait in queue without calling fallback
+	}
+)
+
+
+-----------------------------
+FAULT TOLERANCE: RESILIENCE4J
+-----------------------------
+CIRCUIT BREAKER:
+@CircuitBreaker(name="employeeService", fallbackMethod="getHardcodedEmployee")
+
+resilience4j.circuitbreaker.instances:
+	employeeService:
+		registerHealthIndicator: true
+		eventConsumerBufferSize: 10
+		automaticTransitionFromOpenToHalfOpenEnabled: true
+		failureRateThreshold: 50
+		minimumNumberOfCalls: 5
+		permittedNumberOfCallsInHalfOpenState: 3
+		waitDurationInOpenState: 5s
+		slidingWindowSize: 10
+		slidingWindowType: COUNT_BASED
+
+
+RETRY:
+resilience4j.retry.instances:
+	employeeService:
+		maxRetryAttempts: 3
+		waitDuration: 10000			// Duration between retries
+
+
+BULKHEAD PATTERN:
+@BulkHead(name="employeeService", fallbackMethod="getHardcodedEmployee")
+
+• Semaphore Bulkhead Pattern:
+  Limit the number of concurrent request to service. If limit is reached, it will reject the incoming requests.
+
+resilience4j.bulkhead.instances:
+	employeeService:
+		maxWaitDuration: 3000
+		maxConcurrentCalls: 5
+
+• Fixed Thread Pool Bulkhead Pattern:
+  Isolate a set of thread pool for a service. If limit is reached, request will wait in queue.
+  If queue is also full, requests will be rejected.  
+
+resilience4j.thread-pool-bulkhead.instances:
+	employeeService:
+		maxThreadPoolSize: 1
+		coreThreadPoolSize: 1
+		queueCapacity: 3
+
+
+RATE LIMITING:
+Limits number of request within a specified time. If exceeded, request will be rejected.
+• Client-side Rate Limiting: resilience4j-ratelimiter
+• Server-side Rate Limiting: API Gateway, Response API Filter
+
+@RateLimiter(name="employeeService", fallbackMethod="getHardcodedEmployee")
+
+resilience4j.ratelimiter.instances:
+	employeeService:
+		limitForPeriod: 2
+		limitRefreshPeriod: 5s
+		timeoutDuration: 5s
+		eventConsumerBufferSize: 10
+		registerHealthIndicator: true
+
+
+THROTTLING:
+Queues the request that exceeds the limit.
+If the request is not processed after certain number of retries, it will be rejected.
+
+
+TIME LIMITER:
+@TimeLimiter(name="employeeService")		// Can only be used over method that returns CompletableFuture
+
+resilience4j.timelimiter.instances:
+	employeeService:
+		timeoutDuration: 3s
+		cancelRunningFuture: true
+
+
+----------------------------------------------
+CENTRALIZED CONFIGURATION: SPRING CLOUD CONFIG
+----------------------------------------------
+A separate microservice for storing and serving configurations across multiple applications and environments.
+Lookup for configurations in a Git repository.
+No rebuild, redeploy and restart application when there's a change in configuration.
+Ex: Spring Cloud Config Server, Apache Zookeeper, Consul, ETCD
+
+In Config server:
+
+spring.cloud.config.server.git.uri=<git repo here>
+
+employee-demo-pro.yml				// applicationName-profile.extension
+
+http://localhost:8888/<spring.application.name>/<profile>
+
+
+In Client:
+
+spring.cloud.config.uri=http://localhost:8888
+
+spring.profiles.active=pro							// Add this in application.properties i.e. default profile
+
+@RefreshScope										// To refresh config without restarting application
+POST http://localhost:8080/actuator/refresh			// Spring Boot Actuators provides url for refresh
+
+To refresh configurations for multiple instances, we can use Spring Cloud Bus
+
+
+------------------------------------
+DISTRIBUTED TRACING: SLEUTH & ZIPKIN
+------------------------------------
+Spring Cloud Sleuth:
+Generate TraceID and SpandID and adds them in response headers.
+X-B3-SpanId: fbf39ca6e571f294
+X-B3-TraceId: fbf39ca6e571f294 
+These IDs will be used by tools like Zipkin and ELK to store, index and process log files.
+
+Sleuth Token Components:
+• Application Name
+• TraceID: Same in all applications for one request. TraceID contains a set of spanIDs, forming a tree-like structure. 
+• SpanID: Unique for every request in every application.
+• Zipkin Export Flag: Boolean flag indicates where the span should be exported to Zipkin or not.
+
+Zipkin:
+Calculates how long a request took from one microservice to next.
+Used to troubleshoot latency issues.
+Provides UI dashboard that can visualise tracing data.
+
+Configure Zipkin in your application:
+• Add spring-cloud-sleuth-zipkin dependency
+• spring.zipkin.baseUrl=http://localhost:9411
+• spring.sleuth.sampler.percentage=1.0			// How often logs should be exported to Zipkin? 1.0 means 100%
+
+
+------------------------------
+CENTRALIZED LOGGING: ELK STACK
+------------------------------
+Elasticsearch:
+RESTful search and analytics engine.
+NoSQL database to store inputs/logs.
+
+Logstash:
+Pipeline that accepts logs from various sources and exports data to various targets.
+Used for transforming all the incoming data.
+
+Kibana:
+UI dashboard which helps developers to monitor application logs.
+For searching, need to create a search index pattern.
+Explore by dates.
+
+Log file -> Logstash (process data) -> Elasticsearch (store data) -> Kibana (Visualize data)
+
+
+-----------
+API GATEWAY
+-----------
+Acts as reverse proxy to accept multiple requests and routes them to right services.
+Sits between client and collection of backend services.
+Handles cross cutting concerns such as user authentication, rate limiting, load balancing, analytics, monitoring, etc.
+Over the time we’ll add some new APIs and retire others, but our clients should find all our APIs in same location.
+Ex: Netflix Zuul, Spring Cloud Gateway, Axway
+
+Backends for frontends:
+A separate API gateway for each kind of client such as Web app, Mobile app, 3rd party app.
+
+spring.cloud.gateway.routes:
+	- id: order-service
+	  uri: lb://order-service
+	  predicates:
+		- Path=/order/**
+	- id: payment-service
+	  uri: lb://payment-service
+	  predicates:
+		- Path=/payment/**
+
+Rate Limit:
+RequestRateLimiter filter enables us to limit the number of requests that pass through an API Gateway in a specified time period.
+When request exceeds rate limit, 429 (Too Many Requests) is returned to the client.
+Redis provides implementation for rate limiting.
+
+spring.cloud.gateway.routes:
+	- id: order-service
+	  uri: lb://order-service
+	  predicates:
+		- Path=/order/**
+	  filters:
+		- name: RequestRateLimiter
+		  args:
+			redis-rate-limiter.replenishRate: 500		// number of requests allowed per second
+			redis-rate-limiter.burstCapacity: 1000		// maximum number of requests in a second
+			redis-rate-limiter.requestedTokens: 1		// how many tokens the request costs
+
+Response Headers:
+• x-ratelimit-burst-capacity
+• x-ratelimit-replenish-rate
+• x-ratelimit-remaining
+
+Retry:
+Retry will be performed only if the response status code is 5XX i.e. SERVER_ERROR.
+
+spring.cloud.gateway.routes:
+	- id: order-service
+	  uri: lb://order-service
+	  predicates:
+		- Path=/order/**
+	  filters:
+        - name: Retry
+          args:
+			retries: 3
+            statuses: BAD_GATEWAY
+
+
+------------------------------
+DISTRIBUTED TRANSACTIONS: SAGA
+------------------------------
+Sequence of transactions that spans across multiple services.
+Each transaction updates DB and publishes message/event to trigger next transaction in the saga.
+If a transaction fails, then a series of compensating transactions are executed to undo the changes.
+
+• Choreography Saga Pattern:
+  Each transaction publishes events that triggers transactions in other services.
+  
+• Orchestration Saga Pattern:
+  A separate service called Orchestrator will coordinate all transactions among microservices.
+
+
+-----
+KAFKA
+-----
+Publish-subscribe messaging system.
+Distributed event streaming platform for high-performance data pipelines.
+
+Advantages:
+• Scalable: Scale clusters up to a thousand brokers, trillions of messages per day, thousands of partitions.
+• Permanent Storage: Store streams of data safely in a distributed, durable, fault-tolerant cluster.
+
+Brokers:
+A Kafka cluster is comprised of one or more servers known as brokers.
+A broker does not contain whole data.
+But each broker in cluster knows about all other brokers, topics, and partitions.
+
+Topic:
+Name used to publish a particular stream of data.
+Producer publishes data to a topic and consumer reads that data from that topic by subscribing it.
+
+Producer:
+Publish streams of data to one or more topics.
+Producers knows which data should be published to which partition and broker. User need not specify.
+
+Consumer:
+Subscribe one or more topics and process the stream of data.
+Consumer knows from which broker it should read data.
+
+Partition:
+A topic is split into several parts across multiple brokers known as partitions.
+While creating a topic, we need to specify the number of partitions.
+Data once written to a partition can never be changed. It is immutable.
+
+Topic Replication:
+What if one broker fails down? The data will be lost.
+Kafka enables replication to secure data loss even when a broker fails down.
+Replication factor is number of copies of data over multiple brokers.
+The replication factor value should always be greater than 1 (between 2 or 3).
+Cluster may get confused, which broker should serve the client's request.
+To avoid confusion, it chooses one of the broker's partition as leader.
+Followers will be allowed to synchronize the data.
+But, in the presence of a leader, followers are not allowed to serve the client's request.
+If the broker holding the leader fails, one of its followers will takeover the leadership.
+If the previous leader returns back, it tries to acquire its leadership again.
+The leader and its followers are determined by Zookeeper.
+
+Consumer Groups:
+Each consumer in a group reads data from each partition.
+Only one consumer in a group can read a message (groupId). Two consumers of one group cannot read same message.
+If number of consumers in a group is more than partitions of a topic, some consumers will be inactive.
+
+Consumer Offsets:
+Kafka stores offset value for a consumer group in a live topic known as __consumer_offsets.
+In case of machine failure where a consumer fails to read the data.
+The new consumer will be able to continue reading from where it left off due to the commitment of offset.
+
+Producer Configuration:
+@Bean public ProducerFactory<String, Employee> producerFactory() {
+	Map<String, Employee> props = new HashMap();
+	props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+	props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+	props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+	return new DefaultKafkaProducerFactory<>(props);
+}
+@Bean public KafkaTemplate<String, Employee> kafkaTemplate() {
+	return new KafkaTemplate(producerFactory());
+}
+
+Producer:
+@Autowired KafkaTemplate<String, Employee> kafkaTemplate;
+ListenableFuture<SendResult<String, Employee>> future = kafkaTemplate.send(topicName, emp);
+
+Consumer Configuration:
+@Bean public ConsumerFactory<String, Employee> consumerFactory() {
+	Map<String, Employee> props = new HashMap();
+	props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+	props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+	props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+	props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+	return new DefaultKafkaConsumerFactory<>(props);
+}
+@Bean public ConcurrentKafkaListenerContainerFactory<String, Employee> kafkaListenerContainerFactory() {
+	ConcurrentKafkaListenerContainerFactory<String, Employee> factory = new ConcurrentKafkaListenerContainerFactory();
+	factory.setConsumerFactory(consumerFactory());
+	return factory;
+}
+
+Consumer:
+@KafkaListener(topics = "topicName", groupId = "foo")
+
+Consuming message from a specific partition:
+@KafkaListener(
+  topicPartitions = @TopicPartition(
+	topic = "topicName",
+	partitionOffsets = {
+		@PartitionOffset(partition = "0", initialOffset = "0"), 
+		@PartitionOffset(partition = "3", initialOffset = "0")
+	}
+  ),
+  containerFactory = "kafkaListenerContainerFactory"
+)
+
+Kafka Streams API:
+@Bean public Consumer<KStream<String, Employee>> employeeConsumer() {
+	return kstream -> kstream.forEach((key, emp) -> {
+		System.out.println("Consumed employee: " + emp.getFirstName()); 
+	});
+}
+
+Spring Cloud Stream:
+Framework for building highly scalable event-driven microservices.
+Supports variety of binder implementations like Kafka, ActiveMQ, RabbitMQ, etc.
+
+
+--------------------
+PROMETHEUS & GRAFANA
+--------------------
+Prometheus:
+Spring actuators will expose performance metrics.
+Prometheus is used to pull generated performance metrics to monitor application.
+
+Grafana:
+Used to visualise collected performance metrics.
+
+

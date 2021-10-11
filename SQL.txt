@@ -1,0 +1,404 @@
+Database: Collection of data stored in a format that can be accessed easily.
+DBMS (Database Management System): Software to manage Database. 2 Types: Relational Database & NoSQL Database
+Relational (Structured Query Language) Database: Store data in tables that are linked to each other. Ex: MySQL, Oracle, SQL Server
+NoSQL Database: No tables or relationships.
+• DDL (Data Definition Language)
+  SQL commands used to define database schema. Ex: CREATE, DROP, ALTER, TRUNCATE
+• DQl (Data Query Language)
+  SQL commands used to query data. Ex: SELECT
+• DML (Data Manipulation Language)
+  SQL commands used to manipulate data. Ex: INSERT, UPDATE, DELETE
+• DCL (Data Control Language)
+  SQL commands used to grant or revoke access to database. Ex: GRANT, REVOKE
+• TCL (Transaction Control Language)
+  SQL commands that deals with transaction. Ex: START TRANSACTION, COMMIT, ROLLBACK, SAVEPOINT
+
+
+ROWNUM:
+Cannot use ROWNUM and * in select statement together. But emp.* can be used.
+Cannot use > or = in where condition along with ROWNUM. Only < or <= can be used.
+
+->	SELECT * FROM employee ORDER BY first_name
+		FETCH FIRST 10 ROWS ONLY;
+
+->	SELECT * FROM employee ORDER BY first_name
+		OFFSET 10 ROWS 
+		FETCH NEXT 5 ROWS ONLY;
+
+RANK vs DENSE_RANK:
+If two records have same rank, RANK function will generate gaps.
+DENSE_RANK will not generate gaps.
+
+->	Find employees with Nth highest salary. 
+	WITH salary_rank AS (
+		SELECT emp.*, DENSE_RANK() OVER(ORDER BY salary DESC) AS rank FROM employee
+	)
+	SELECT * FROM salary_rank sr WHERE sr.rank = 2;
+
+CTE (Common Table Expression):
+Temporary resultset that can be accessed in SELECT, UPDATE, INSERT or DELETE statements.
+
+->	Find hierarchy of employees.
+	with emp_cte as (
+		select empid, empname, managerid from emp where empid = 3
+		union all
+		select empid, empname, managerid from emp e
+		join emp_cte on e.empid = emp_cte.managerid
+	);
+
+
+Joins:
+• Inner Join or Join
+• Outer Joins
+  LEFT JOIN, RIGHT JOIN, FULL OUTER JOIN
+• Self Join
+  SELECT e.name "Employee", m.name "Manager" FROM employee e, employee m WHERE e.managerid = m.empid;
+• Cross Join
+  Every record in one table joins with every record in other table.
+
+If two tables are joined using same column name, we can write as below
+->	SELECT * FROM Orders o JOIN Customers c USING (customer_id);
+
+
+UNION & UNION ALL:
+To combine records from multiple queries. All queries should have same number of columns & similar data type.
+UNION ignores duplicate rows. UNION ALL doesnot ignore duplicate rows.
+
+INTERSECT:
+To select only the common rows from multiple queries.
+
+MINUS:
+To subtract result of first query by result of second query.
+
+->	Find Nth highest salary, where n=3.
+	select * from (select distinct salary from emp order by salary desc) where rownum<=3
+	minus
+	select * from (select distinct salary from emp order by salary desc) where rownum<=2;
+
+
+Aggregate Functions:
+MIN(), MAX(), AVG(), SUM(), COUNT(*)
+
+->	Find 2nd highest salary.
+	select max(salary) from emp where salary < (select max(salary) from emp);
+
+GROUP BY: Can select only aggregate functions and columns that are grouped.
+
+HAVING:
+Similar to WHERE condition, the only difference is WHERE is used before GROUP BY, HAVING is used after GROUP BY.
+The columns used in HAVING condition should be part of SELECT statement.
+->	SELECT department, AVG(salary) FROM employee GROUP BY department HAVING AVG(salary) > 10000;
+
+
+Subquery vs Correlated Subquery:
+A subquery that uses values from outer query.
+In normal subquery, inner query executes only once first and returns values to outer query.
+In correlated subquery, inner query executes once for each row of outer query.
+
+->	Find employees whose salary is more than their department average.
+	SELECT * FROM employee outer WHERE salary > (
+		SELECT AVG(salary) FROM employee inner WHERE inner.department = outer.department
+	);
+
+ALL, ANY:
+Use ALL or ANY in WHERE condition, when the subquery gives a list of values.
+
+Find employees whose salary is more than all HR.
+SELECT * FROM employee WHERE salary > ALL (SELECT salary FROM employee WHERE department = 'HR');
+
+EXISTS:
+Will check if a record is present in the subquery for each row.
+
+->	Find employees who have at least one person reporting to them.
+	SELECT * FROM employee outer WHERE EXISTS (
+		SELECT * FROM employee inner WHERE inner.managerid = outer.empid
+	);
+
+
+NVL & COALESCE:
+NVL accepts only 2 arguments. COALESCE accepts multiple arguments.
+NVL evaluates both arguments. COALESCE stops at first occurrence of non-null value.
+NVL does data type conversion based on first argument. COALESCE expects all arguments to be of same data type.
+
+->	SELECT FIRST_NAME, NVL(LAST_NAME, INITIAL) FROM EMPLOYEES;
+
+->	SELECT FIRST_NAME, COALESCE(LAST_NAME, INITIAL, FATHER_NAME) FROM EMPLOYEES;
+
+
+Numeric Functions:
+ROUND(3.141592, 2)
+TRUNCATE(3.141592, 2)
+CEILING(3.141592)
+FLOOR(3.141592)
+ABS(-3.141592)
+RAND() -> Gives random value between 0 to 1
+
+String Functions:
+LENGTH('Mounish')
+UPPER('Mounish')
+LOWER('Mounish')
+TRIM(' Mounish ')
+LEFT('Mounish', 3) -> Result will be Mou
+SUBSTRING('Mounish', index, length)
+LOCATE('N', 'Mounish') -> Result will be 4 (index of N)
+LOCATE('X', 'Mounish') -> Result will be 0 if there is no match
+REPLACE('Melanish', 'ela', 'ou')
+CONCAT('Mounish', ' ', 'Kumar')
+
+Date Functions:
+NOW()
+CURDATE()
+CURTIME()
+YEAR(NOW()), MONTH, DATE, HOUR, MINUTE, SECOND, DAYNAME, MONTHNAME
+DATE_FORMAT(NOW(), '%D %M %Y') -> 26 12 1991
+TIME_FORMAT(NOW(), '%H:%i %p') -> 12:00 PM
+DATE_ADD(NOW(), INTERVAL 1 DAY) -> Next day
+DATE_SUB(NOW(), INTERVAL 1 DAY) -> Previous day
+DATE_DIFF('2020-12-23', '2020-12-26') -> 3
+
+
+IF(expression, whenTrue, whenFalse):
+SELECT FIRST_NAME, IF(YEAR(JOIN_DATE) = YEAR(NOW()), 'Fresher', 'Senior') FROM STUDENTS;
+
+CASE:
+SELECT FIRST_NAME, CASE
+					WHEN YEAR(JOIN_DATE) = YEAR(NOW()) THEN 'Fresher'
+					WHEN YEAR(JOIN_DATE) = YEAR(NOW()) - 1 THEN 'Senior'
+					WHEN YEAR(JOIN_DATE) = YEAR(NOW()) - 2 THEN 'Super Senior'
+FROM STUDENTS;
+
+
+----
+VIEW
+----
+We can save queries or subqueries in a VIEW and reuse it as a virtual table. 
+Simplifies SELECT statement.
+
+CREATE OR REPLACE VIEW EMPLOYEE_TOTAL_SALARY AS 
+SELECT EMP_ID, NAME, SUM(SALARY) FROM SALARIES GROUP BY EMP_ID, NAME;
+
+DROP VIEW EMPLOYEE_TOTAL_SALARY;
+
+Updatable Views:
+• To update a View, following conditions should be met.
+• No GROUP BY or ORDER BY clause.
+• No DISTINCT keyword.
+• No null values.
+• No nested queries.
+• No multiple tables.
+
+WITH CHECK OPTION:
+If you try to modify data in view such that it disappears from view, WITH CHECK OPTION throws error.
+
+View vs Materialized View:
+View uses a query to pull data from existing tables.
+Materialized View is a table on disk that contains result set of a query.
+
+
+----------------
+STORED PROCEDURE
+----------------
+Block of SQL code stored in database.
+
+Advantages of Stored Procedures:
+• Faster execution.
+• Data security (Grant access to procedure and deny access to table).
+• Provides iteration, decision making, exception handling functionalities.
+• Executes many queries in one block using single command.
+• Execution plan is reused even when there is change in parameter values.
+• Reduces network traffic (Executing procedure has small statement than full query).
+• Code reusability.
+
+
+DROP PROCEDURE IF EXISTS get_employees
+DELIMITER $$
+CREATE PROCEDURE get_employees(city VARCHAR, salary INT)
+BEGIN
+	IF salary <= 0 THEN
+		SIGNAL SQLSTATE '22003'
+		SET MESSAGE_TEXT = 'Invalid Salary'  -- Throw error when validation fails
+	END IF;
+		
+	IF city IS NULL THEN
+		SELECT * FROM Employees;
+	ELSE
+		SELECT * FROM Employees e WHERE e.city = city;  -- Can have 1 or more SQL statements
+	END IF;
+	
+	-- The above IF ELSE statement can also be written as below
+	SELECT * FROM Employees e WHERE e.city = IFNULL(city, e.city);
+END$$
+
+DELIMITER ;
+
+Calling Stored Procedure:
+CALL get_employees('Banglore')  -- If we don't pass parameter, SQL throws error
+
+Output Parameter:
+CREATE PROCEDURE get_employees(city VARCHAR, OUT salary INT)
+BEGIN
+	SELECT emp_salary INTO salary FROM Employees e WHERE e.city = IFNULL(city, e.city);
+END$$
+
+Session Variables:
+SET @name = 'Mounish'
+
+Local Variables:
+CREATE PROCEDURE get_average_salary(OUT salary INT)
+BEGIN
+	DECLARE average_salary DECIMAL(9, 2) DEFAULT 0;
+	DECLARE total_employees INT;
+	DECLARE total_ctc DECIMAL(9, 2);
+	SELECT COUNT(*), SUM(emp_salary) INTO total_employees, total_ctc
+		FROM Employees;
+		
+	SET average_salary = total_ctc / total_employees;
+	
+	SELECT average_salary;
+END$$
+
+
+--------
+FUNCTION
+--------
+Can return only single value. Cannot return result sets with multiple rows and columns.
+
+DROP FUNCTION IF EXISTS get_average_salary;
+CREATE FUNCTION get_average_salary()
+RETURNS INT
+DETERMINISTIC  -- If we give this function same input, it always returns same output
+READS SQL DATA
+MODIFIES SQL DATA
+BEGIN
+	DECLARE average_salary DECIMAL(9, 2) DEFAULT 0;
+	DECLARE total_employees INT;
+	DECLARE total_ctc DECIMAL(9, 2);
+	SELECT COUNT(*), SUM(emp_salary) INTO total_employees, total_ctc
+		FROM Employees;
+		
+	SET average_salary = total_ctc / total_employees;
+	
+	RETURN IFNULL(average_salary, 0);
+END
+
+
+-------
+TRIGGER
+-------
+Block of SQL code that automatically gets executed before or after an insert, update or delete statement.
+Mainly used for logging on insert, update or delete.
+
+DROP TRIGGER IF EXISTS employee_after_insert;
+CREATE TRIGGER employee_after_insert
+	AFTER INSERT ON Employees
+	FOR EACH ROW
+BEGIN
+	UPDATE Salaries SET salary = NEW.salary WHERE emp_id = NEW.emp_id;
+END $$
+
+SHOW TRIGGERS;
+
+
+-----
+EVENT
+-----
+Block of SQL code that gets executed according to schedule.
+
+First turn on the events.
+SHOW VARIABLES LIKE 'event%';
+SET GLOBAL event_scheduler = ON;
+
+DROP EVENT IF EXISTS monthly_delete_payment_history;
+CREATE EVENT monthly_delete_payment_history
+ON SCHEDULE
+	-- AT '2022-01-01'
+	EVERY 1 MONTH STARTS '2021-01-01' ENDS '2022-01-01'
+DO BEGIN
+	DELETE FROM payment_history WHERE ins_date < DATESUB(NOW(), INTERVAL 1 YEAR);
+END $$
+
+SHOW EVENTS;
+
+ALTER EVENT payment_history DISABLE;
+
+
+-----------
+TRANSACTION
+-----------
+Group of SQL statements that represent single unit of work.
+
+Transaction Properties (ACID):
+• Atomicity:
+  Either all statements gets executed or all statements gets rolled back.
+• Consistency:
+  DB should be consistent before and after the transaction.
+• Isolation:
+  Each transaction is isolated from eachother until it is committed.
+  Locks are used to prevent multiple transactions from updating same data at same time.
+  Only one transaction at a time can update rows. Other transactions has to wait.
+• Durability:
+  Once transaction is committed, changes made by transactions are permanent.
+
+START TRANSACTION;
+-- All the SQL statements here
+COMMIT;
+
+Concurrency Problems:
+• Lost Updates:
+  When two transaction updates same data, transaction that commits later will override changes of first transaction.
+• Dirty Reads:
+  When a transaction reads data of an uncommitted transaction, the data might rollback.
+• Non-repeating Reads:
+  When a transaction reads different value at different points in a transaction.
+• Phantom Reads:
+  Data that gets missed out while querying, but appears like a ghost.
+
+Transaction Isolation Levels:
+• Read Uncommitted
+• Read Committed
+• Repeatable Read (Default)
+• Serializable
+
+SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+
+-------------
+NORMALIZATION
+-------------
+Process of ensuring that DB design follows few predefined rules to prevent data duplication (redundency).
+To eliminate Insertion Anomalies, Updation Anomalies and Deletion Anomalies.
+• 1NF:
+  No multi-value attribute. Ex: vmounishkumar@gmail.com, contact@mounish.dev
+  No composite attribute. Ex: Address should be split into multiple columns like doorno, street, city.
+• 2NF:
+  Each table should have single purpose and every column in that table should describe that entity.
+  No partial dependency.
+• 3NF:
+  No transitive dependency i.e. a column in the table should not be derived from other columns.
+  Ex: full_name column is not needed because it can be derived from first_name & last_name. 
+• BCNF:
+
+
+--------
+INDEXING
+--------
+Indexes are tree like data structure that helps speed up the data retrival process.
+Slows down INSERT, UPDATE & DELETE. Because the data in all index also needs to be updated.
+
+SELECT * FROM employee WHERE country = 'Singh';  -- index should be created for last_name column
+CREATE INDEX idx_last_name ON employee (last_name(6));		-- index only first 6 charcters of last_name column
+SHOW INDEXES IN employee;
+
+Clustered & Non-Clustered Index:
+A table can have only one clustered index. A clustered index is created for primary key by default.
+Clustered index determine the order in which data is stored in table.
+Non-clustered index will be stored separately, thus needs additional storage.
+Non-clustered index table will have non-clustered index columns and points back to original table for lookup using clustered index.
+Non-clustered index is comparitively slower because it has to look up the table using clustered index.
+
+EXPLAIN PLAN:
+EXPLAIN PLAN FOR <query>;
+If TYPE column has ALL, full table is scaned for the query.
+ROWS column has the number of rows scanned for the particular query.
+
+

@@ -1,0 +1,129 @@
+ArrayList:
+Arrays have fixed size
+Grows dynamically by 50% to 100%
+Use Array if you know the number of items to store Ex: new ArrayList(100);
+Best for retriving by index O(1)
+
+LinkedList:
+Don't waste memory
+Best for inserting & deleting O(1)
+
+Stack:
+LIFO
+All operations O(1)
+
+Queue:
+FIFO
+All operations O(1)
+PriorityQueue: Add O(n)
+
+HashMap:
+Key Value pair
+All operations O(1)
+Can store 1 null key and any number of null values
+Not ordered
+Uses hash function to map key to index of the array
+For 2 different keys, if we get same index, collision occurs
+	Chaining (Use LinkedList)
+	Open addressing
+		Linear = ( hash1 + i ) % array_size
+		Quadratic = ( hash1 + isquare ) % array_size
+		Double Hash = ( hash1 + i * hash2 ) % array_size
+
+BinaryTree:
+Only 2 children for each node (left child and right child)
+All operations O(n)
+
+BinarySearchTree:
+Value in left child should be smaller and value in right child should be larger
+If balanced, time complexity is O(log n)
+If unbalanced, time complexity is O(n)
+
+AVLTree:
+Whenever we add sorted data to a BinarySearchTree, it will become skewed.
+Skewed trees look like LinkedList.
+If difference between the height of left subtree and right subtree is more than 1, it is called Unbalanced Tree.
+AVLTree is a self balancing BinarySearchTree. If we add or remove nodes, it will rebalance itself using rotations.
+
+Heap:
+Complete tree i.e. every levels are completely filled from left to right, except last level.
+Heap property i.e. value of every node should be greater than or equal to its children.
+Max Heap: Root node has the largest value.
+Min Heap: Root node has the smallest value.
+Sorting (HeapSort)
+Graph algorithms (Shortest path)
+
+Trie:
+Mainly used for autocompletion.
+Fast lookup O(length of word)
+
+
+-----------------
+SORTING ALGORITHM
+-----------------
+BubbleSort:
+Scans array from left to right and swap them.
+Time complexity O(n) to O(n^2)
+
+SelectionSort:
+Find minimum number in unsorted part of array and swap it in correct index.
+Time complexity O(n^2) to O(n^2)
+
+InsertionSort:
+Take each item from unsorted array and place it in corrent position in sorted array by shifting items.
+Time complexity O(n) to O(n^2)
+
+MergeSort:
+Divide array into small arrays and finally merge into sorted array using recursion.
+Divide and conquer algorithm.
+Time complexity O(n log n) to O(n log n)
+Space complexity O(n)
+
+QuickSort:
+Select last item as pivot. Rearrange items such that all items less than pivot are on left and greater than pivot are on right.
+Time complexity O(n log n) to O(n^2)
+Space complexity O(log n) to O(n)
+
+CountingSort:
+Store the occurences of each item in a new array based on index.
+All the values in array should be positive.
+Values in array should not have big gaps.
+Time complexity O(n + k) where k = biggest number in the array
+Space complexity O(k)
+
+BucketSort:
+Distribute items in different buckets, sort using QuickSort algorithm.
+Time complexity O(n + k) to O(n^2) where k = number of buckets
+Space complexity O(n + k) where k = number of buckets
+
+
+-------------------
+SEARCHING ALGORITHM
+-------------------
+LinearSearch:
+Iterate over the list and if target is found in index return the index, else return -1.
+Time complexity O(1) to O(n)
+
+BinarySearch:
+Works only on sorted list. First look at the middle item.
+If target is greater than middle item, search right side of the middle item.
+If target is less than middle item, search left side of the middle item.
+Time complexity O(log n)
+Space complexity O(log n) for storing recursive calls on stack
+
+TernarySearch:
+Same as BinarySearch, but with two middle pointers.
+Time complexity O(log base3 n)
+
+JumpSearch:
+Divide array into few blocks and just check last item in each block.
+Number of blocks = Sqrt(n)
+If the target is less than last item in the block, we do linear search in that block.
+If the target is greater than last item in the block, we simply go to next block.
+Time complexity O(Sqrt(n))
+
+ExponentialSearch:
+Start with small range. If target is not within that range, double the range.
+Time complexity O(log i) where i is index of target
+
+
