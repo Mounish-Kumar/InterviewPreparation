@@ -1,16 +1,18 @@
 ----------
 KUBERNETES
 ----------
-Kubernetes is an container orchestration engine.
+K8s is an container orchestration engine.
 Used to run, monitor and manage containerized applications in cluster of nodes.
+K8s Admin sets up and maintain K8s cluster.
+K8s User deploys applications in K8s cluster using CI/CD pipeline.
 
 Advantages:
-• Hight Availability (Zero downtime)
+• High Availability (Zero downtime)
 • Scalability
 • Disaster Recovery (Backup & restore)
 • Automatic Deployment
 
-Kubernetes Architecture:
+K8s Architecture:
 Two types of Node.
 • Master Node
 • Worker Node
@@ -19,7 +21,7 @@ Master Node:
 Every Master Node have 4 processes running on them.
 • API Server:
   Gatekeeper for authentication.
-  Exposes REST APIs that can be used to communicate with Kubernetes.
+  Exposes REST APIs that can be used to communicate with K8s.
   If we want to schedule new Pods, create new Service, query deployment status we have to request API server.
   Kubectl client can be used to communicate with API server.
   When multiple Master Nodes are present, requests to API Server are load balanced.
@@ -47,7 +49,7 @@ Every Worker Node have 3 processes running on them.
   Forwards requests from Services to Pods.
 
 Pod:
-Smallest unit of Kubernetes. Abstraction over container.
+Smallest unit of K8s. Abstraction over container.
 Dockerized applications are deployed inside Pod in Worker Node.
 Usually one container will run in each Pod, but we can also run multiple containers.
 
@@ -72,20 +74,51 @@ If we keep configurations like database url in application.yml, when the configu
 • push it to repository
 • pull new image in Pod
 • restart the Pod
-Kubernetes has ConfigMap to store external configuration of application.
+K8s has ConfigMap to store external configuration of application.
 Use configuration from ConfigMap as environmental variables or as properties file.
 Now when the configuration changes, we just have to change the ConfigMap.
 
 Secret:
 Keeping database username and password in ConfigMap is insecure.
-Kubernetes has Secret to store sensitive data like credentials, SSH certificates, tokens, etc.
+K8s has Secret to store sensitive data like credentials, SSH certificates, tokens, etc.
 The data is stored in base64 encoded format.
 Use configuration from Secret as environmental variables or as properties file.
 
 Volume:
+Directory with some data.
 If we keep the database inside Pod, when the Pod restarts data will be lost.
-Kubernetes has Volume to plug external storage on harddrive to Pod.
+K8s has Volume to plug external storage on harddrive to Pod.
 Now when the database Pods gets restarted, all the data will remain.
+
+DB Storage Requirements:
+• Storage shouldn't depend on Pod lifecycle
+• Storage must be available on all Pods
+• Storage should survive even if the cluster crashes
+
+Persistent Volume:
+Present outside Namespace and accessible to the whole cluster.
+Should be created before the Pod that depends on it is created.
+K8s Admin will configure the storage and create Persistent Volume.
+• Local Volume Type:
+  Violate 2nd & 3rd points of DB storage requirements.
+• Remote Volume Type:
+  Used for DB persistence.
+
+Persistent Volume Claim:
+Developers needs to configure application YAML file to use Persistent Volume created by K8s Admin.
+Pod requests Volume through PVC, PVC finds a suitable Volume in the cluster and mounts it inside the container.
+PVC should be in the same Namespace as Pod.
+
+Advantages of PVC:
+• Developers needn't care about where the actual storage is (Cloud storage or local storage).
+• Developers needn't set up the actual storage.
+
+Storage Class:
+K8s Admins configures storage and creates Persistent Volume. Developers claims PV using PVC.
+For cluster with 100s of applications, this can be tedious, time consuming and messy task.
+Storage Class creates Persistent Volume dynamically when PVC claims it.
+Creating Volumes in the cluster is automated.
+Pod claims storage via PVC. PVC requests storage from Storage Class. Storage Class creates suitable PV.
 
 Replica:
 If Pod dies, the application shouldn't have downtime.
@@ -111,7 +144,7 @@ Can be used for testing on local machine.
 Minikube CLI is used for start up or deleting the cluster.
 
 Kubectl:
-Command line tool to interact with Kubernetes cluster via API Server.
+Command line tool to interact with K8s cluster via API Server.
 Kubectl CLI is used for configuring the Minikube cluster.
 We can also use UI dashboard or REST API to talk to API Server.
 
@@ -119,6 +152,83 @@ Setup:
 • Minikube needs Virtualization. Install Hypervisor like Docker or Hyper-V or VirtualBox.
 • Install Minikube
 • minikube start --driver=docker
+
+Namespace:
+Virtual cluster inside K8s cluster.
+We can group resources into namespaces like
+• Database
+• Monitoring
+• Elastic Stack
+• Nginx-Ingress
+
+Why Namespace?
+• Structure resources in the cluster.
+  Everything we create (like deployment, service, configmap) will go into one namespace (default namespace).
+  Difficult to manage for complex applications.
+• Many teams may have different applications with same name.
+• Resource sharing across different environments.
+  Ex: We can reuse common resources like Elastic Stack in both TEST & PRE environment.
+• Limit access to resources in namespace.
+  A team can create, update or delete resources only in their namespaces.
+
+Default Namespaces:
+• kube-system:
+  Has system processes, master process and kubectl process. Don't create or modify this namespace.
+• kube-public:
+  Has publicly accessible data. Has a configmap which containes cluster information.
+• kube-node-lease:
+  Determines availability of a node. Heartbeats of nodes.
+• default:
+  Resource we create are located here.
+
+Only Services can be accessed from other Namespaces.
+Volumes and Nodes can't be grouped inside a Namespace. They live globally in a cluster.
+Change active namespace using kubens.
+
+Ingress:
+External Service can be used for accessing application using http protocol, IP address and port number.
+To access application using domain name and secure connection (https), we can use Ingress.
+
+Ingress Controller:
+Set of Pods that evaluates Ingress rules and manages redirections.
+Entrypoint to the cluster.
+Ex: K8s Nginx Ingress Controller
+
+In cloud platform, external requests will first come to Cloud Load Balancer.
+Load Balancer will redirect it to Ingress Controller.
+
+minikube addons enable ingress		# Enable Ingress in minikube
+
+Helm:
+• Package manager for K8s.
+	Used to package YAML files and distribute them in public and private repositories.
+	Example: Let's say we want to deploy ELK stack in our K8s cluster for logging.
+	To deploy ELK stack, we need to create StatefulSet, ConfigMap, Secret, User with Permissions & Services.
+	If we've to create all these YAML files manually, it will be a difficult task.
+	Since ELK stack deployment is common, someone has already created these YAML files, packaged them
+	and made it available in Helm repository for reuse. This bundle of YAML files is called Helm chart.
+• Templating Engine
+	For all the Microservices, most of the values in Deployment & Service YAML files are same.
+	The difference will be application name, Docker image name & version.
+	Instead of writing separate YAML files for each Microservices, we can define a common blueprint/template.
+	In template YAML file, values that are dynamic can be replaced by placeholders. name: {{ .Values.name }}
+	In values.yaml file, we can define the values for placeholders.
+	In CI/CD pipeline, we can use template YAML files and place the values on the fly.
+
+Helm Chart:
+Bundle of YAML files. Used to:
+• Create our own Helm charts and push them to Helm repository to make it available for others to use.
+• Download and reuse exisiting Helm charts that other people pushed.
+• Deploying same applications across different environments (TEST, PRE, PRO).
+Commonly used deployments like ELK stack, MongoDB, MySQL, Prometheus have Helm charts available in repository.
+Private Repositories are used to share Helm charts within organization.
+
+helm install <chartname>								# Deploy Helm chart
+helm install --values=my-values.yaml <chart-name>
+helm upgrade <chartname>
+helm rollback <chartname>
+helm search <keyword>									# Search for deployment in repository
+
 
 Kubectl Commands:
 https://gitlab.com/nanuchi/youtube-tutorial-series/-/blob/master/basic-kubectl-commands/cli-commands.md
@@ -130,26 +240,49 @@ deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-	name: nginx-deployment
+	name: myapp-deployment
 	labels:
-		app: nginx
+		app: myapp
 spec:
 	replicas: 2
 	selector:
 		matchLabels:
-			app: nginx
+			app: myapp
 	template:
 		metadata:
 			labels:
-				app: nginx
+				app: myapp
 		spec:
 			containers:
-			- name: nginx
-			  image: nginx:1.16
+			- name: myapp
+			  image: myapp:1.16
 			  ports:
 			  - containerPort: 8080
-		
-status: 	# Automatically generated by Kubernetes
+			  volumeMounts:								# Where to mount the Volume inside the container
+			  - mountPath: "var/www/html"				# Apps can access mounted data in this path
+			    name: mypd
+			  env:
+			  - name: ME_CONFIG_MONGODB_ADMINUSERNAME
+			    valueFrom:
+					secretKeyRef:
+						name: mongodb-secret
+						key: mongo-root-username
+			  - name: ME_CONFIG_MONGODB_ADMINPASSWORD
+			    valueFrom:
+					secretKeyRef:
+						name: mongodb-secret
+						key: mongo-root-password
+			  - name: ME_CONFIG_MONGODB_SERVER
+			    valueFrom:
+					configMapKeyRef:
+						name: mongodb-configmap
+						key: database-url
+			volumes:
+				- name: mypd
+				  persistentVolumeClaim:
+					claimName: pvc-name					# Pod references PV Claim
+														# Pod & its containers will have access to PV
+status: 	# Automatically generated by K8s
 			# Current status will be continuously compared with specification to maintain the state
 			# Status data are stored in etcd
 
@@ -160,14 +293,17 @@ service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-	name: nginx-service
+	name: myapp-service
 spec:
 	selector:
-		app: nginx		# Connect Service to Deployment or Pod using selector
+		app: myapp				# Connect Service to Deployment or Pod using 
+	type: LoadBalancer			# Only for external service (to access from browser)
+								# For internal service type is "ClusterIP" (default)
 	ports:
 		- protocol: TCP
-		  port: 80				# Service is listening to port 80
+		  port: 80				# Service port
 		  targetPort: 8080		# targetPort should be same as containerPort of Deployment
+		  nodePort: 30000		# Only for external service (to access from browser). Value must be between 30000 to 32767
 
 
 -----------
@@ -179,7 +315,109 @@ metadata:
 	name: mongodb-secret
 type: Opaque
 data:
-	mongo-root-username: <base64 encoded value>
+	mongo-root-username: <base64 encoded value>		# echo -n 'mounish' | base64
 	mongo-root-password: <base64 encoded value>
 
+
+--------------
+configmap.yaml
+--------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+	name: mongodb-configmap
+	namespace: my-namespace
+type: Opaque
+data:
+	database-url: mongodb-service		# Connect ConfigMap to Service
+
+
+------------
+ingress.yaml
+------------
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+	name: myapp-ingress
+spec:
+	tls:										# Adding TLS certificate (https) for domain
+	- hosts:
+	  - mounish.dev
+	  secretName: myapp-secret-tls
+	rules:
+	- host: mounish.dev
+	  http:
+		paths:
+		- path: /analytics
+		  backend:
+			serviceName: analytics-service		# All requests to mounish.dev will be forwarded to Internal Service
+			servicePort: 3000					# Port of Internal Service
+		- path: /shopping
+		  backend:
+			serviceName: shopping-service
+			servicePort: 8080
+
+
+---------------------------
+tls-certificate-secret.yaml
+---------------------------
+apiVersion: v1
+kind: Secret
+metadata:
+	name: myapp-secret-tls
+	namespace: default					# Secret and Ingress should be in same namespace
+type: kubernetes.io/tls
+data:
+	tls.crt: <base64 encoded value>		# echo -n 'mounish' | base64
+	tls.key: <base64 encoded value>
+
+
+----------------------
+persistent-volume.yaml
+----------------------
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+	name: test-volume
+	labels:
+		failure-domain.beta.kubernetes.io/zone: us-central1-a__us-central1-b
+spec:
+	capacity:
+		storage: 400Gi					# How much storage
+	accessModes:
+	- ReadWriteOnce
+	gcePersistentDisk:					# Google Cloud parameters
+		pdName: my-data-disk
+		fsType: ext4
+
+
+----------------------------
+persistent-volume-claim.yaml
+----------------------------
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+	name: pvc-name
+spec:
+	storageClassName: storage-class-name				# If not using Storage Class, mention manual
+	volumeMode: Filesystem								# Use volumeMode only if Storage Class is not used
+	accessModes:
+		- ReadWriteOnce
+	resources:
+		requests:
+			storage: 10Gi
+
+
+------------------
+storage-class.yaml
+------------------
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+	name: storage-class-name
+provisioner: kubernetes.io/aws-ebs				# Storage provisioner
+parameters:
+	type: io1
+	iopsPerGB: "10"
+	fsType: ext4
 
