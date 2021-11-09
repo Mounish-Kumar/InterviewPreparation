@@ -61,6 +61,20 @@ Service is permanent IP address. Each Pod has its own Service.
 Lifecycle of Pod and Service is not connected.
 Even if Pod dies, Service will remain, so we needn't change IP address.
 Pods communicate with eachother using Service.
+Service also does load balancing.
+
+Service Types:
+• ClusterIP Service:
+  Default Service. Accessible only within the cluster. External traffic cannot access ClusterIP Service.
+• Headless Service:
+  When client wants to communicate with 1 specific Pod directly without load balancing.
+  Used in Stateful applications like DB where there will be master and worker Pods.
+  When client requests, returns IP address of Pod directly instead of Service.
+• NodePort Service:
+  External traffic can access NodePort Service. Port range is 30000 to 32767.
+• LoadBalancer Service:
+  LoadBalancer Service becomes accessible externally through cloud provider's load balancer.
+  Better and secure alternative to NodePort Service.
 
 Ingress:
 To access our application from browser, we can use External Service.
@@ -131,11 +145,16 @@ Abstraction for creating Pods, where we can specify number of Replicas for each 
 DEPLOYMENT( REPLICASET( POD( CONTAINER( APP ) )))
 
 StatefulSet:
-We can't replicate database Pod using deployment.
-Because when multiple Replicas access shared database, we might get data inconsistency issues.
-Stateful applications like database should be created using StatefulSet.
-StatefulSet takes care of replicating database Pods.
+Used to deploy Stateful applications.
+We can't replicate database applications using deployment.
+Because when multiple Replicas access shared storage, we might get data inconsistency issues.
+StatefulSet takes care of replicating database applications like MySql, MongoDB, ElasticSearch.
 StatefulSet makes sure that database reads and writes are synchronized to avoid concurrency issues.
+Only one Master Pod is allowed to save or update the data, remaining Pods can only read data.
+Each database application Pod have their own replica of physical storage (PV).
+Data between different storage are sychronized continuously by clustered database setup.
+When Master Pod changes the data, remaining Pods update the date to be in sync.
+Data in storage (PV) will survive even when all the Pod dies.
 
 Minikube:
 Setting up cluster on local machine is very difficult.
@@ -299,6 +318,7 @@ spec:
 		app: myapp				# Connect Service to Deployment or Pod using 
 	type: LoadBalancer			# Only for external service (to access from browser)
 								# For internal service type is "ClusterIP" (default)
+	clusterIP: None				# Only for Headless Service
 	ports:
 		- protocol: TCP
 		  port: 80				# Service port
