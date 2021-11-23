@@ -332,13 +332,13 @@ Allows client to identify user based on authentication performed by Authorizatio
 and to obtain basic information about user as JWT along with access token.
 • Add spring-security-oauth2-autoconfigure in pom.xml file.
 • Add @EnableOAuth2Sso
-• Create an app in Google or Facebook or GitHub and copy-paste App ID and App Secret in your application.yml file.
+• Create an app in Google or Facebook or GitHub and copy-paste Client ID and Client Secret in your application.yml file.
 • In application.yml file,
 
 security.oauth2:
 	client:
-		clientId: <App ID>
-		clientSecret: <App Secret>
+		clientId: <Client ID>
+		clientSecret: <Client Secret>
 		accessTokenUri: https://graph.facebook.com/oauth/access_token
 		userAuthorizationUri: https://www.facebook.com/dialog/oauth			// url to redirect for authentication
 		tokenName: oauth_token

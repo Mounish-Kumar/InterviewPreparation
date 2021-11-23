@@ -255,7 +255,7 @@ To write more maintainable, understandable and testable code.
   }
   
 • Liskov Substitution Principle:
-  Derived class must be able to substite base class.
+  Derived class must be able to substitute base class.
   interface Car {
 	void turnOnEngine();
 	void accelerate();

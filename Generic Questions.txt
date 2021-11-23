@@ -67,10 +67,10 @@ Code Review:
 • Does every class follow Single Responsibility principle? Class and method segregation
 • Exception management
 • Transaction management
-• SONAR
+• SONAR violations
 • Unit testcases
 
-SONAR Issues:
+SONAR Violations:
 • Unused imports
 • 
 
@@ -84,8 +84,7 @@ BE:
 • Time taken for each service using AOP
 • Time taken for external call using AOP
 • Lazy fetch
-• Cache frequently used queries
-• EH Cache
+• Cache frequently used queries (EH Cache)
 • Instead of making DB calls in loop, use saveAll()
 • Check if slowness is due to filter or AOP or interceptor
 DB:

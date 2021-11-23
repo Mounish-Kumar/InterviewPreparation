@@ -37,9 +37,7 @@ If we want to access same data multiple times, instead of hitting DB everytime w
 • Second Level Cache:
   Session factory level cache.
   Need external dependencies and configurations for second level cache (Ex: EH Cache, Swarm Cache).
-  @Cacheable
-  @Cache(usage=CacheConcurrencyStrategy.READ_ONLY)
-  Above annotations should be added to Entity that needs to be cached.
+  @Cacheable, @CacheEvict, @CachePut
 
 Hibernate States (Persistence Lifecycle):
 • Transient:

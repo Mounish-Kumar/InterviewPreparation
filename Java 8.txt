@@ -35,7 +35,7 @@ Internal loops (forEach) are faster
 forEach takes object of Consumer interface as paramater
 
 Intermediate methods: map, filter
-Terminate methods: forEach, findFirst
+Terminal methods: forEach, findFirst
 
 Method Reference:
 Use :: after object, before method
@@ -167,6 +167,29 @@ thread.start();
 If we start a thread twice, one thread will run and other will throw IllegalThreadStateException.
 Calling start() methods starts a new thread. Calling run() runs in main thread.
 
+implements Runnable vs extends Thread:
+• If your class had already extended some another class, it can not extend Thread class anymore.
+  Java does not support multiple inheritance.
+• By implementing Runnable we can run same task on multiple threads.
+  Also it could be run by other means like Executor.
+
+class RunnableTask implements Runnable {
+	@Override public void run () { System.out.println ("Runnable interface"); }
+}
+class ThreadTask extends Thread {
+	@Override public void run() { System.out.println( "Thread class "); }
+}
+class Demo {
+	public static void main (String ... args){
+		RunnableTask runnableTask = new ThreadDemo();
+		runnableTask.start();
+		runnableTask.start();				// Starting same task twice will throw IllegalThreadStateException
+		ThreadTask threadTask = new ThreadTask();
+		new Thread(threadTask).start();
+		new Thread(threadTask).start();		// Can run same task on multiple threads
+	}
+}
+
 Pausing a thread:
 try { Thread.sleep(5000); } catch ( InterruptedException e ) {  }		// Write this in run() method
 
@@ -175,6 +198,10 @@ thread.join();		// Current thread wait for another thread to complete
 
 Interrupting a thread:
 thread.interrupt();		// Doesn't stop the thread execution. Just sends interruption request. Upto to the thread to cancel it or not.
+
+Wait & Notify:
+obj.wait() will wait for the other thread to notify.
+obj.notifyAll() will notify all the waiting threads.
 
 
 -------------------------------------------------
@@ -201,10 +228,6 @@ Deadlock: When two threads wait for eachother indefinitely.
 Volatile:
 Using volatile keyword while declaring a variable will always read the value from main memory, not from cache.
 Solves Visiblity problem.
-
-Wait & Notify:
-obj.wait() will wait for the other thread to notify.
-obj.notifyAll() will notify all the waiting threads.
 
 Atomic Objects:
 Use Atomic classes. Solves Race condition.
