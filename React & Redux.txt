@@ -22,7 +22,7 @@ Lifecycle Methods:
 												   We have to return the updated state
 	render()									// Render component
 	componentDidMount()							// API calls
-• UPDATE
+• UPDATE (State or Props change)
 	static getDerivedStateFromProps()
 	shouldComponentUpdate()						// Should return false, to avoid re-rendering static components
 	render()
@@ -166,11 +166,13 @@ REDUX
 -----
 Library for managing application's state.
 
-Store: State of the application. Single source of truth (one store).
+Store: State of the application. Single source of truth (one store). Accessible at all parts of the UI.
 
 Reducer: Pure functions to modify the state.
+Pure functions don't touch global state, don't mutate arguments, no api calls, no DOM manipulation.
+It just gets current state and returns new state.
 
-Action: Only way to change state is by dispatching/firing actions.
+Action: Only way to change state is by dispatching/firing actions. It's easier to log, undo or redo actions.
 
 
 useReducer:
@@ -204,7 +206,7 @@ Immer:
 If state is mutable, React has to do deep equality check to find whether the state is changed or not.
 Also, producing a new state everytime is a boring, boiler-platy task.
 Immer is a third party library used to achieve immutablility in a convenient way.
-
+Redux toolkit uses Immer to create immutable state.
 
 Redux Middleware:
 Action/reducer pattern is clean for updating the state within an application.

@@ -1,0 +1,53 @@
+--------------------
+Reactive Programming
+--------------------
+• Programming paradigm that promotes asynchronous, non-blocking, event driven approach to data processing.
+• Request is assigned to a particular thread.
+• Thread will not wait for DB driver to get response, instead it will send an event to DB.
+• Once response is ready it will be assigned to available thread.
+• If there's any changes in DB data, an event will be published.
+• Whoever subscribes to that event, can stream the data.
+• Example: Cricket live score
+• DB Connection will always be open.
+
+Back Pressure:
+• When DB sends large volume of data as response, application may crash with OutOfMemoryError.
+• With Back Pressure support, we can limit DB driver on how much data we're expecting.
+• DB driver will slow down the data based on our configuration.
+
+Reactive Programming Interface:
+• Publisher<T>
+	void subscribe(Subscriber<? super T> s);
+• Subscriber<T>
+	void onSubscribe(Subscription s);
+	void onNext(T t);
+	void onError(Throwable t);
+	void onComplete();
+• Subscription
+	void request(long n);
+	void cancel();
+• Processor<T, R> extends Subscriber<T>, Publisher<R>
+
+Reactive Programming Library:
+• Project Reactor
+• RxJava
+• Jdk9 Flow Reactive Stream
+
+Project Reactor Data Type:
+• Mono
+• Flux
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  

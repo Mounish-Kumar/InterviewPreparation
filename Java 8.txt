@@ -13,12 +13,21 @@ Can have only one abstract method, but can have any number of default methods.
 Example: Runnable, Comparable, Comparator
 
 Predefined functional interfaces are present in java.util.function
-Consumer<T>: void accept(T t)			Ex: forEach(consumer)
-Supplier<T>: T get()
-Predicate<T>: boolean test(T t)			Ex: filter(predicate)
-Function<T, R>: R apply(T t)			Ex: map(function), Comparator interface
-BinaryOperator<T>: T apply(T t, T t)
-UnaryOperator<T>: T apply(T t)
+• Consumer<T>
+	void accept(T t);
+	Ex: forEach(consumer)
+• Supplier<T>
+	T get();
+• Predicate<T>
+	boolean test(T t);
+	Ex: filter(predicate)
+• Function<T, R>
+	R apply(T t);
+	Ex: map(function), Comparator interface
+• BinaryOperator<T>
+	T apply(T t, T t);
+• UnaryOperator<T>
+	T apply(T t);
 
 .andThen(after) for chaining
 .compose(before) for chaining in reverse order

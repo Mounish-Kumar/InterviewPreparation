@@ -12,10 +12,14 @@ Advantages:
 • Containers are lightweight because it shares the host OS unlike resource intensive Virtual Machines.
   Each VM (Hypervisor) needs full blown Guest OS.
 
+Virtual Machine:
+Hardware > OS > Hypervisor > Guest OS > App
+
 Container:
 Isolated environment for running an application.
 Lightweight because it shares Host OS (Kernel).
 Container is like any other process running on our computer.
+Hardware > OS > Docker > App
 
 On Linux machine, we can run Linux containers.
 On Windows machine, we can run Windows & Linux containers.
