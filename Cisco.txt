@@ -1,0 +1,65 @@
+Cisco Frontend:
+
+Angular vs React
+
+Lifecycle hooks
+
+Ways of component communication
+
+Can ngIf & ngFor be in same div?
+
+ng-template, ng-container, ngTemplateOutlet
+
+Change Detection Strategies
+
+Unit Testcases & End to End Testcases
+
+Observable vs Promise
+
+Subject vs BehaviourSubject
+
+Retry a rest api call on failure
+
+AOT vs JIT
+
+
+Cisco Backend:
+
+Where will you use interface and where will you use abstract class?
+
+Why we override hashcode and equals method? Why not only hashcode?
+
+Create immutable class
+
+Have you created Generic class?
+
+Exception vs Error
+
+ClassNotFoundExecption vs NoClassDefFoundError
+
+throw vs throws
+
+Can we use throws in main method?
+
+When to go for Compile time exception and Runtime exception?
+
+Have you created compile time exception?
+
+Dependency injection
+
+Write program to retry some operation after 3 seconds if operation fails
+
+Why do we use volatile? What is the level of cache?
+
+
+Cisco Manager:
+
+Explain about your last project
+
+What is multithreading?  Have you worked on it?
+
+How will you perform multiple tasks (like calling another rest api, saving in db) in parallel?
+
+What will happen when a Kafka listener has crashed after processing the request?
+
+Have you really worked on Kafka?
